@@ -1,0 +1,352 @@
+{
+  "version": 1,
+  "doc": "sources/02-katalog-style.md",
+  "confidence_legend": {
+    "sumber": "didukung sumber",
+    "sebagian": "sebagian didukung sumber",
+    "umum": "pengetahuan desain umum, belum ada sumber"
+  },
+  "styles": [
+    {
+      "id": "opus-showreel",
+      "name": "Opus Showreel",
+      "summary": "Gaya viral default: tipografi tebal + shape + partikel + transisi cepat + logo reveal",
+      "palette": [
+        "#0A0A0A",
+        "#F5F5F5",
+        "#8A8A8A",
+        "#FF5A1F"
+      ],
+      "type": "Inter/Geist Bold",
+      "motion": [
+        "spring overshoot",
+        "mask wipe",
+        "zoom-through",
+        "cut tiap 1-2 beat"
+      ],
+      "sfx": [
+        "whoosh",
+        "impact",
+        "riser",
+        "ui click"
+      ],
+      "engine": "canvas2d",
+      "confidence": "sumber"
+    },
+    {
+      "id": "kinetic-type",
+      "name": "Kinetic Typography",
+      "summary": "Huruf/kata bergerak: geser, fade, zoom, berubah bentuk; varian elastic type",
+      "palette": [
+        "#111111",
+        "#FFFFFF",
+        "#FFD400"
+      ],
+      "type": "Grotesk tebal / variable font",
+      "motion": [
+        "per-glyph stagger 20-40ms",
+        "scale punch kata kunci",
+        "tracking mengencang"
+      ],
+      "sfx": [
+        "typewriter tick",
+        "hit",
+        "whoosh"
+      ],
+      "engine": "canvas2d",
+      "confidence": "sumber"
+    },
+    {
+      "id": "swiss",
+      "name": "Swiss / International",
+      "summary": "Grid matematis, asimetris, sans-serif, rata kiri",
+      "palette": [
+        "#F4F1EA",
+        "#111111",
+        "#E30613"
+      ],
+      "type": "Helvetica/Akzidenz/Inter",
+      "motion": [
+        "wipe linear sesuai grid",
+        "slide presisi",
+        "state instan, tanpa elastis"
+      ],
+      "sfx": [
+        "dry click",
+        "metronome tick",
+        "paper slide"
+      ],
+      "engine": "canvas2d",
+      "confidence": "sumber"
+    },
+    {
+      "id": "glitch",
+      "name": "Glitch / Cyber",
+      "summary": "RGB split, scanline, VHS, pixel-sort, datamosh",
+      "palette": [
+        "#000000",
+        "#00F0FF",
+        "#FF2A6D",
+        "#FFFFFF"
+      ],
+      "type": "Monospace / condensed grotesk",
+      "motion": [
+        "jitter seed",
+        "freeze-frame",
+        "tearing horizontal",
+        "1 efek + 1 gerak kamera per scene"
+      ],
+      "sfx": [
+        "glitch burst",
+        "bitcrush",
+        "static",
+        "stutter",
+        "sub drop"
+      ],
+      "engine": "canvas2d",
+      "confidence": "sumber"
+    },
+    {
+      "id": "liquid",
+      "name": "Liquid / Morph",
+      "summary": "Gerak seperti air, objek morph jadi objek lain",
+      "palette": [
+        "#3A0CA3",
+        "#7209B7",
+        "#F72585",
+        "#FF9E00"
+      ],
+      "type": "Rounded sans",
+      "motion": [
+        "metaball",
+        "morph path",
+        "ease-in-out panjang",
+        "follow-through"
+      ],
+      "sfx": [
+        "soft swoosh",
+        "bloop",
+        "ambient pad"
+      ],
+      "engine": "canvas2d",
+      "confidence": "sumber"
+    },
+    {
+      "id": "flat",
+      "name": "Flat 2D / Geometric",
+      "summary": "Shading minimal, bentuk bersih, warna sederhana",
+      "palette": [
+        "#FFB703",
+        "#FB8500",
+        "#219EBC",
+        "#023047",
+        "#8ECAE6"
+      ],
+      "type": "Geometric sans",
+      "motion": [
+        "pop-in overshoot",
+        "rotasi shape",
+        "stroke draw-on"
+      ],
+      "sfx": [
+        "pop",
+        "bubble",
+        "ui click"
+      ],
+      "engine": "canvas2d",
+      "confidence": "sumber"
+    },
+    {
+      "id": "isometric",
+      "name": "Isometric",
+      "summary": "2D dengan kesan 3D di sudut 30 derajat; sistem dengan banyak bagian",
+      "palette": [
+        "#E9F1F7",
+        "#4F6D7A",
+        "#C0D6DF",
+        "#DD6E42"
+      ],
+      "type": "Geometric sans",
+      "motion": [
+        "blok naik dari lantai",
+        "pan diagonal",
+        "aliran data antar node"
+      ],
+      "sfx": [
+        "mechanical click",
+        "thunk",
+        "hum"
+      ],
+      "engine": "canvas2d",
+      "confidence": "sumber"
+    },
+    {
+      "id": "hand-drawn",
+      "name": "Hand-drawn / Analog",
+      "summary": "Garis tidak rata, jitter, tekstur kertas, grain",
+      "palette": [
+        "#F3EAD3",
+        "#1B1B1B",
+        "#2B59C3",
+        "#E4572E"
+      ],
+      "type": "Handwritten / marker",
+      "motion": [
+        "boiling line on 2s",
+        "stroke progresif"
+      ],
+      "sfx": [
+        "pencil scratch",
+        "paper rub",
+        "tap"
+      ],
+      "engine": "canvas2d",
+      "confidence": "sumber"
+    },
+    {
+      "id": "paper-cutout",
+      "name": "Paper Cut-out / Collage",
+      "summary": "Lapisan kertas, grain, sapuan kuas, bayangan lembut",
+      "palette": [
+        "#F2E8CF",
+        "#386641",
+        "#6A994E",
+        "#BC4749"
+      ],
+      "type": "Serif display",
+      "motion": [
+        "stop-motion 8-12fps",
+        "parallax layer",
+        "rotasi acak kecil"
+      ],
+      "sfx": [
+        "paper tear",
+        "fold",
+        "stop-motion clack"
+      ],
+      "engine": "canvas2d",
+      "confidence": "sebagian"
+    },
+    {
+      "id": "synthwave",
+      "name": "Retro / Synthwave",
+      "summary": "Grain + palet terbatas; grid neon, matahari bergaris",
+      "palette": [
+        "#2B0F54",
+        "#AB1F65",
+        "#FF4F69",
+        "#FFF7F8",
+        "#FF8142"
+      ],
+      "type": "Chrome italic / retro display",
+      "motion": [
+        "grid scroll ke kamera",
+        "scanline",
+        "glow pulse per beat"
+      ],
+      "sfx": [
+        "synth arp",
+        "laser zap",
+        "tape stop"
+      ],
+      "engine": "canvas2d",
+      "confidence": "sebagian"
+    },
+    {
+      "id": "glass",
+      "name": "Glass / Soft Glow",
+      "summary": "Soft glow, gradien halus, glass UI, orb iridescent",
+      "palette": [
+        "#EDE9E3",
+        "#1C1C1E",
+        "#B8C0FF",
+        "#FFD6E0"
+      ],
+      "type": "Geist / SF-like",
+      "motion": [
+        "morph lambat",
+        "spring kritis",
+        "blur-in"
+      ],
+      "sfx": [
+        "shimmer",
+        "soft chime",
+        "airy whoosh"
+      ],
+      "engine": "canvas2d",
+      "confidence": "sumber"
+    },
+    {
+      "id": "3d",
+      "name": "3D / Voxel / 3D Type",
+      "summary": "Objek 3D, kamera orbit, objek menyala per beat",
+      "palette": [
+        "#0B0C10",
+        "#66FCF1",
+        "#45A29E",
+        "#C5C6C7"
+      ],
+      "type": "Extruded bold",
+      "motion": [
+        "orbit kamera",
+        "dolly zoom",
+        "flash per beat"
+      ],
+      "sfx": [
+        "sub boom",
+        "metallic hit",
+        "doppler whoosh"
+      ],
+      "engine": "three.js",
+      "confidence": "sumber"
+    },
+    {
+      "id": "dataviz",
+      "name": "Data Viz / Infographic",
+      "summary": "Angka, chart, rail skala, label",
+      "palette": [
+        "#0F172A",
+        "#38BDF8",
+        "#F8FAFC",
+        "#F59E0B"
+      ],
+      "type": "Tabular sans",
+      "motion": [
+        "bar tumbuh ease-out",
+        "counter angka",
+        "garis chart tergambar"
+      ],
+      "sfx": [
+        "tick",
+        "data blip",
+        "ding"
+      ],
+      "engine": "canvas2d",
+      "confidence": "sumber"
+    },
+    {
+      "id": "brutalist",
+      "name": "Brutalist",
+      "summary": "Blok warna kasar, tipe raksasa, kontras ekstrem",
+      "palette": [
+        "#FFFF00",
+        "#000000",
+        "#FFFFFF",
+        "#FF0000"
+      ],
+      "type": "Grotesk black / mono",
+      "motion": [
+        "hard cut",
+        "step tanpa easing",
+        "shake keras"
+      ],
+      "sfx": [
+        "hard hit",
+        "buzzer",
+        "noise burst"
+      ],
+      "engine": "canvas2d",
+      "confidence": "umum"
+    }
+  ]
+}
