@@ -10,6 +10,7 @@ Dikumpulkan 31 Okt 2026 dari pencarian web.
 | [03-prinsip-gerak.md](03-prinsip-gerak.md) | 12 prinsip animasi, easing, spring (rumus closed-form), timing ke beat |
 | [04-sound-design-sfx.md](04-sound-design-sfx.md) | Taksonomi SFX, aturan sinkron, API sumber SFX untuk agent (Freesound, Openverse, sintesis lokal) |
 | [05-motion-untuk-editan-video.md](05-motion-untuk-editan-video.md) | ±35 elemen untuk editan video (caption, lower third, callout, zoom punch-in, UI walkthrough, dll), format faceless, ekspor overlay transparan, pembanding produk Motion Format |
+| [06-riset-ui-claude-dan-workflow.md](06-riset-ui-claude-dan-workflow.md) | Gaya visual Claude (warna/font), workflow kreator (YouTube, skill pack, claude-video-2), prinsip UX untuk dashboard v2 |
 | [../data/styles.json](../data/styles.json) | Versi mesin-terbaca katalog style (nanti dipakai generator) |
 
 ## Catatan kualitas sumber

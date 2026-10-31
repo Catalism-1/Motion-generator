@@ -9,8 +9,9 @@ Dashboard (form + style)  →  prompts/<slug>.md  →  Claude Code + skill  → 
 
 ## Cara pakai
 1. Buka `dashboard/index.html` di browser (double-click saja, tanpa install).
-2. Isi 5 langkah: **Proyek → Style → Scene → Suara → Output**. Prompt markdown tampil live di kanan.
-3. Klik **Download .md**, lalu simpan ke folder `prompts/`.
+2. Tulis idenya di kotak besar, **atau klik template** (Reels promo, Intro YouTube, Explainer, Data, Demo app,
+   Logo reveal, Caption untuk editan, Lower third). Semua pengaturan langsung terisi default.
+3. Pilih style (22 pilihan, ada label *Rekomendasi*) → cek **Detail cepat** → klik **Salin prompt** atau **Download .md** (simpan ke `prompts/`).
 4. Buka Claude Code di folder repo ini, lalu ketik:
    ```
    buat video dari prompts/<slug>.md
@@ -21,8 +22,9 @@ Contoh hasil: [`prompts/contoh-launch-kopi-senja.md`](prompts/contoh-launch-kopi
 ## Isi repo
 | Path | Isi |
 |---|---|
-| `dashboard/` | Form builder (HTML/CSS/JS murni, gaya visual Claude) |
-| `data/styles.json` | 14 style: palet, gerak, SFX, larangan. Setelah edit, jalankan `node scripts/build-styles.mjs` |
+| `dashboard/` | Brief builder (HTML/CSS/JS murni, gaya visual Claude, ramah HP) |
+| `data/styles.json` | 22 style (8 diadaptasi dari [claude-video-2](https://github.com/ItsssssJack/claude-video-2), MIT) |
+| `data/elements.json` | 27 elemen untuk editan video (caption, lower third, callout, …). Setelah edit data, jalankan `node scripts/build-styles.mjs` |
 | `.claude/skills/motion-generator/` | Skill: mengajari Claude cara mengerjakan brief |
 | `sources/` | Riset: tren Opus 5.5, katalog style, prinsip gerak, SFX |
 | `docs/RANCANGAN.md` | Rancangan sistem & format brief |

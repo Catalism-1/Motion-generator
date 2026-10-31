@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "doc": "sources/02-katalog-style.md",
   "confidence_legend": {
     "sumber": "didukung sumber",
@@ -37,7 +37,11 @@
         "transisi lambat >1 detik",
         "teks kecil yang tidak terbaca di HP"
       ],
-      "sfx_query": "cinematic modern"
+      "sfx_query": "cinematic modern",
+      "best_for": [
+        "promo",
+        "showreel"
+      ]
     },
     {
       "id": "kinetic-type",
@@ -65,7 +69,12 @@
         "terlalu banyak kata per layar",
         "font tipis di ukuran kecil"
       ],
-      "sfx_query": "typing whoosh"
+      "sfx_query": "typing whoosh",
+      "best_for": [
+        "hook",
+        "caption",
+        "promo"
+      ]
     },
     {
       "id": "swiss",
@@ -94,7 +103,12 @@
         "ornamen dekoratif",
         "elemen keluar dari grid"
       ],
-      "sfx_query": "minimal click"
+      "sfx_query": "minimal click",
+      "best_for": [
+        "explainer",
+        "brand",
+        "editan"
+      ]
     },
     {
       "id": "glitch",
@@ -126,7 +140,12 @@
         "glitch terus-menerus tanpa jeda",
         "lebih dari 1 efek glitch utama per scene"
       ],
-      "sfx_query": "glitch digital"
+      "sfx_query": "glitch digital",
+      "best_for": [
+        "tech",
+        "hook",
+        "musik"
+      ]
     },
     {
       "id": "liquid",
@@ -156,7 +175,12 @@
         "sudut tajam",
         "cut keras"
       ],
-      "sfx_query": "liquid bubble"
+      "sfx_query": "liquid bubble",
+      "best_for": [
+        "brand",
+        "santai",
+        "musik"
+      ]
     },
     {
       "id": "flat",
@@ -186,7 +210,12 @@
         "gradien berat",
         "bayangan realistis"
       ],
-      "sfx_query": "pop cartoon"
+      "sfx_query": "pop cartoon",
+      "best_for": [
+        "explainer",
+        "promo",
+        "editan"
+      ]
     },
     {
       "id": "isometric",
@@ -215,7 +244,11 @@
         "perspektif yang tidak konsisten",
         "sudut selain 30 derajat"
       ],
-      "sfx_query": "mechanical"
+      "sfx_query": "mechanical",
+      "best_for": [
+        "explainer",
+        "tech"
+      ]
     },
     {
       "id": "hand-drawn",
@@ -243,7 +276,12 @@
         "garis vektor sempurna",
         "gerak terlalu mulus 60fps tanpa boil"
       ],
-      "sfx_query": "pencil paper"
+      "sfx_query": "pencil paper",
+      "best_for": [
+        "explainer",
+        "santai",
+        "editan"
+      ]
     },
     {
       "id": "paper-cutout",
@@ -272,7 +310,11 @@
         "gerak super mulus",
         "efek digital neon"
       ],
-      "sfx_query": "paper"
+      "sfx_query": "paper",
+      "best_for": [
+        "santai",
+        "brand"
+      ]
     },
     {
       "id": "synthwave",
@@ -302,7 +344,11 @@
         "palet di luar neon/ungu",
         "font modern minimalis"
       ],
-      "sfx_query": "synth retro"
+      "sfx_query": "synth retro",
+      "best_for": [
+        "musik",
+        "gaming"
+      ]
     },
     {
       "id": "glass",
@@ -332,7 +378,12 @@
         "glow di elemen UI",
         "kontras keras"
       ],
-      "sfx_query": "shimmer airy"
+      "sfx_query": "shimmer airy",
+      "best_for": [
+        "tech",
+        "brand",
+        "app"
+      ]
     },
     {
       "id": "3d",
@@ -361,7 +412,11 @@
         "kamera bergetar tanpa alasan",
         "terlalu banyak objek di frame"
       ],
-      "sfx_query": "cinematic boom"
+      "sfx_query": "cinematic boom",
+      "best_for": [
+        "tech",
+        "promo"
+      ]
     },
     {
       "id": "dataviz",
@@ -390,7 +445,11 @@
         "angka tanpa label",
         "chart tanpa sumber data"
       ],
-      "sfx_query": "data blip"
+      "sfx_query": "data blip",
+      "best_for": [
+        "data",
+        "explainer"
+      ]
     },
     {
       "id": "brutalist",
@@ -419,7 +478,329 @@
         "easing halus",
         "palet pastel"
       ],
-      "sfx_query": "hard hit"
+      "sfx_query": "hard hit",
+      "best_for": [
+        "hook",
+        "promo"
+      ]
+    },
+    {
+      "id": "poster-pop",
+      "name": "Poster Pop",
+      "summary": "Poster gig yang berisik: huruf condensed raksasa, warna flat, hard cut",
+      "palette": [
+        "#FFD400",
+        "#111111",
+        "#FFFFFF",
+        "#111111"
+      ],
+      "type": "League Gothic (display) + Archivo Black",
+      "motion": [
+        "slam power4.out 0,2 s",
+        "punch 1→1,06→1 tiap beat",
+        "satu kata/angka per beat",
+        "huruf sengaja terpotong di tepi frame",
+        "land jolt: frame turun 18 px lalu settle 0,15 s"
+      ],
+      "sfx": [
+        "hard hit",
+        "kick",
+        "stomp"
+      ],
+      "engine": "canvas2d",
+      "confidence": "sumber",
+      "avoid": [
+        "warna selain kuning/hitam/putih",
+        "teks kecil",
+        "fade lembut"
+      ],
+      "sfx_query": "punchy hit",
+      "best_for": [
+        "hook",
+        "promo",
+        "list"
+      ],
+      "credit": "claude-video-2 (MIT) — github.com/ItsssssJack/claude-video-2"
+    },
+    {
+      "id": "risograph",
+      "name": "Risograph",
+      "summary": "Cetak dua tinta: berbutir, sedikit meleset register, penuh energi",
+      "palette": [
+        "#F5F0E6",
+        "#FF48B0",
+        "#0078BF",
+        "#1A1A1A"
+      ],
+      "type": "Archivo Black + Space Mono 700",
+      "motion": [
+        "stamp power4.out 0,25 s tanpa fade",
+        "layer biru meleset 3–6 px (misregistration, multiply)",
+        "grain ber-seed tetap",
+        "cut tiap beat",
+        "stamp: scale 1,12→1 + rotasi 1–2° settle"
+      ],
+      "sfx": [
+        "stamp thump",
+        "paper",
+        "snare"
+      ],
+      "engine": "canvas2d",
+      "confidence": "sumber",
+      "avoid": [
+        "opacity fade",
+        "lebih dari 2 tinta"
+      ],
+      "sfx_query": "stamp print",
+      "best_for": [
+        "promo",
+        "musik",
+        "event"
+      ],
+      "credit": "claude-video-2 (MIT) — github.com/ItsssssJack/claude-video-2"
+    },
+    {
+      "id": "blueprint",
+      "name": "Blueprint",
+      "summary": "Gambar teknik yang menggambar dirinya sendiri, garis demi garis",
+      "palette": [
+        "#0E3A66",
+        "#CFE3F7",
+        "#1C4D80",
+        "#FFD23F"
+      ],
+      "type": "IBM Plex Mono 500/700, kapital",
+      "motion": [
+        "stroke draw power1.inOut 0,6–1,2 s",
+        "garis konstruksi dulu, lalu garis asli",
+        "label datang dengan leader line",
+        "exploded view ber-stagger",
+        "hanya bagian penting diisi kuning"
+      ],
+      "sfx": [
+        "technical tick",
+        "pencil",
+        "mechanical click"
+      ],
+      "engine": "canvas2d",
+      "confidence": "sumber",
+      "avoid": [
+        "isian warna selain aksen",
+        "foto di dalam gambar"
+      ],
+      "sfx_query": "mechanical click",
+      "best_for": [
+        "explainer",
+        "produk",
+        "tech"
+      ],
+      "credit": "claude-video-2 (MIT) — github.com/ItsssssJack/claude-video-2"
+    },
+    {
+      "id": "midnight-grid",
+      "name": "Midnight Grid",
+      "summary": "Navy pekat, dot grid tenang, satu biru yang bicara",
+      "palette": [
+        "#0B1220",
+        "#E8EDF7",
+        "#8C98B3",
+        "#3D8BFF"
+      ],
+      "type": "Inter 700 + JetBrains Mono",
+      "motion": [
+        "land power3.out 0,5 s",
+        "diagram dibangun node demi node",
+        "garis tersambung power2.inOut 0,6 s",
+        "node aktif biru, lama kembali redup",
+        "kamera pan tenang, stagger 0,05 s"
+      ],
+      "sfx": [
+        "soft blip",
+        "data tick",
+        "airy whoosh"
+      ],
+      "engine": "canvas2d",
+      "confidence": "sumber",
+      "avoid": [
+        "whip pan",
+        "lebih dari 1 warna aksen"
+      ],
+      "sfx_query": "digital blip",
+      "best_for": [
+        "tech",
+        "explainer",
+        "app"
+      ],
+      "credit": "claude-video-2 (MIT) — github.com/ItsssssJack/claude-video-2"
+    },
+    {
+      "id": "editorial-paper",
+      "name": "Editorial Paper",
+      "summary": "Grafis koran yang hidup: kertas hangat, tinta hitam, satu biru",
+      "palette": [
+        "#FFF1E5",
+        "#1A1A1A",
+        "#6B5E55",
+        "#0F5499"
+      ],
+      "type": "Playfair Display 700/900 + Inter 500",
+      "motion": [
+        "land power3.out 0,7 s",
+        "garis tergambar kiri→kanan 1,2–2 s",
+        "angka menghitung sinkron dengan garis",
+        "kamera zoom chart (ubah sumbu), tidak shake",
+        "satu bar biru tumbuh melewati yang lain"
+      ],
+      "sfx": [
+        "paper",
+        "pen",
+        "soft tick"
+      ],
+      "engine": "canvas2d",
+      "confidence": "sumber",
+      "avoid": [
+        "shake kamera",
+        "lebih dari 1 aksen"
+      ],
+      "sfx_query": "paper pen",
+      "best_for": [
+        "data",
+        "explainer"
+      ],
+      "credit": "claude-video-2 (MIT) — github.com/ItsssssJack/claude-video-2"
+    },
+    {
+      "id": "graphite-ui",
+      "name": "Graphite UI",
+      "summary": "Film produk yang tenang: graphite gelap, UI tajam, kamera presisi",
+      "palette": [
+        "#0E0F12",
+        "#ECEDEF",
+        "#8A8F98",
+        "#3DD68C"
+      ],
+      "type": "Inter 500/600",
+      "motion": [
+        "land expo.out 0,6 s",
+        "kamera power3.inOut 1,2 s",
+        "teks muncul dari balik mask, bukan fade",
+        "hold tiap ide ≥ 1,2 s",
+        "cascade list 0,04 s"
+      ],
+      "sfx": [
+        "ui click",
+        "soft whoosh",
+        "success chime"
+      ],
+      "engine": "canvas2d",
+      "confidence": "sumber",
+      "avoid": [
+        "bounce/elastic",
+        "soft fade",
+        "gerak handheld"
+      ],
+      "sfx_query": "ui click",
+      "best_for": [
+        "app",
+        "tech",
+        "produk"
+      ],
+      "credit": "claude-video-2 (MIT) — github.com/ItsssssJack/claude-video-2"
+    },
+    {
+      "id": "ink-line",
+      "name": "One Ink Line",
+      "summary": "Satu garis kuas sumi yang tak pernah terangkat, berubah jadi bentuk berikutnya",
+      "palette": [
+        "#F4EFE6",
+        "#1C1C1C",
+        "#7A7068",
+        "#D23C2A"
+      ],
+      "type": "tanpa teks; stempel Noto Serif JP 600",
+      "motion": [
+        "satu garis tak putus",
+        "draw on 2s (15 fps), boil 1–2 px",
+        "draw-on sine.inOut 1,5 s",
+        "stempel merah sekali di akhir, power2.in 0,2 s"
+      ],
+      "sfx": [
+        "brush stroke",
+        "paper",
+        "water drop",
+        "gong"
+      ],
+      "engine": "canvas2d",
+      "confidence": "sumber",
+      "avoid": [
+        "banyak teks",
+        "garis putus",
+        "lebih dari 1 aksen"
+      ],
+      "sfx_query": "brush paper",
+      "best_for": [
+        "brand",
+        "santai",
+        "logo"
+      ],
+      "credit": "claude-video-2 (MIT) — github.com/ItsssssJack/claude-video-2"
+    },
+    {
+      "id": "particle-field",
+      "name": "Particle Field",
+      "summary": "Asap cahaya yang memadat jadi bentuk tenang di malam pekat",
+      "palette": [
+        "#0A0F1C",
+        "#F3EEE4",
+        "#111A2C",
+        "#6FD3E8"
+      ],
+      "type": "tanpa teks; opsional Inter 300",
+      "motion": [
+        "titik mengalir, tidak pernah pop",
+        "swirl lewat noise field 70–150 px",
+        "land power2.inOut 0,9 s",
+        "settle wobble teredam 3–4%",
+        "5% titik berwarna aksen, konsisten"
+      ],
+      "sfx": [
+        "airy whoosh",
+        "shimmer",
+        "sub swell"
+      ],
+      "engine": "canvas2d",
+      "confidence": "sumber",
+      "avoid": [
+        "titik muncul/hilang tiba-tiba",
+        "gerak lurus",
+        "glow blur per titik"
+      ],
+      "sfx_query": "ambient swell",
+      "best_for": [
+        "tech",
+        "musik",
+        "logo"
+      ],
+      "credit": "claude-video-2 (MIT) — github.com/ItsssssJack/claude-video-2"
     }
-  ]
+  ],
+  "tags": {
+    "promo": "Promo",
+    "hook": "Hook / Shorts",
+    "explainer": "Explainer",
+    "data": "Data & angka",
+    "tech": "Tech / AI",
+    "app": "Demo app",
+    "brand": "Brand / logo",
+    "santai": "Santai",
+    "musik": "Musik",
+    "editan": "Untuk editan",
+    "caption": "Caption",
+    "produk": "Produk",
+    "list": "List / top N",
+    "event": "Event",
+    "showreel": "Showreel",
+    "logo": "Logo",
+    "gaming": "Gaming"
+  }
 }

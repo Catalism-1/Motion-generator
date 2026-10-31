@@ -1,6 +1,6 @@
 ---
 name: motion-generator
-description: Kerjakan Motion Brief (file markdown dari dashboard Motion Generator, biasanya di prompts/*.md, frontmatter `generator: motion-generator/v1`) menjadi video motion graphics berbasis kode, dengan SFX yang dicari agent, storyboard, dan MP4. Pakai ketika user bilang "buat video dari prompts/...", menempelkan brief yang diawali frontmatter itu, atau bertanya cara memakai dashboard Motion Generator.
+description: Kerjakan Motion Brief (file markdown dari dashboard Motion Generator, biasanya di prompts/*.md, frontmatter `generator: motion-generator/v1` atau `/v2`) menjadi video motion graphics berbasis kode, dengan SFX yang dicari agent, storyboard, dan MP4. Pakai ketika user bilang "buat video dari prompts/...", menempelkan brief yang diawali frontmatter itu, atau bertanya cara memakai dashboard Motion Generator.
 ---
 
 # Motion Generator: cara memakai Motion Brief
@@ -11,13 +11,14 @@ Skill ini **tidak** mendesain apa pun sendiri. Semua keputusan kreatif sudah dit
 ## 0. Kalau user belum punya brief
 Arahkan user:
 1. Buka `dashboard/index.html` di browser (cukup double-click, tidak perlu server).
-2. Isi 5 langkah (Proyek, Style, Scene, Suara, Output), lalu klik **Download .md**.
+2. Tulis ide di kotak besar (atau klik template), pilih style, cek "Detail cepat" (semua sudah ada default),
+   lalu klik **Salin prompt** atau **Download .md**.
 3. Simpan ke `prompts/<slug>.md`, lalu bilang: `buat video dari prompts/<slug>.md`.
 
 Jangan menebak brief dari chat kalau user sebenarnya ingin pakai dashboard.
 
 ## 1. Baca brief
-- Frontmatter: `slug`, `style`, `duration_s`, `aspect`, `fps`, `bpm`, `output`.
+- Frontmatter: `slug`, `style`, `duration_s`, `aspect`, `fps`, `bpm`, `output`, dan (v2) `mode`, `element`, `loop`, `export`.
 - Bagian brief (nomor di brief): §3 Style (palet, tipe, aturan gerak, **Hindari**), §4 Shot list, §5 Timeline HITS (+ blok `const HITS`),
   §6 Rencana suara, §7 Deliverables, §8 Checklist.
 - Baca juga referensi yang disebut brief: `sources/02-katalog-style.md` (bagian style itu) dan `sources/03-prinsip-gerak.md`.
@@ -67,6 +68,16 @@ Aturan:
   riser = noise + filter naik + pitch naik; glitch = potongan bitcrush/stutter; shimmer = sine tinggi + vibrato).
   Catat di CREDITS.md: "disintesis".
 - Selalu panggil API dari terminal/server, bukan dari halaman `file://` (CORS tidak terjamin).
+
+## 4b. Mode v2
+- `mode: overlay` (elemen untuk editan, lihat §2b brief): **jangan gambar latar.** `seek(t)` mulai dengan `clearRect`.
+  Preview di browser boleh memakai latar kotak-kotak/footage contoh, tapi render final tanpa latar.
+  - `export: alpha` → render PNG ber-alpha (`omitBackground: true` di screenshot Playwright), lalu
+    `ffmpeg -c:v prores_ks -profile:v 4444 -pix_fmt yuva444p10le out/<slug>.mov` dan
+    `ffmpeg -c:v libvpx-vp9 -pix_fmt yuva420p out/<slug>.webm`. SFX diserahkan terpisah sebagai `out/<slug>_sfx.wav`.
+  - `export: greenscreen` → latar `#00FF00` polos, tanpa anti-alias hijau di tepi elemen (hindari warna hijau di elemen).
+- `loop: true` → frame `DURATION*FPS` harus identik dengan frame 0. Semua gerakan periodik memakai periode yang membagi habis durasi.
+- §6 berisi "Tanpa suara" → jangan buat atau unduh audio. HITS hanya untuk aksen visual. MP4 tanpa track audio.
 
 ## 5. Storyboard dulu (kalau §7 memintanya)
 Render 1 frame di tengah tiap scene → gabung jadi `storyboard.png` (grid, label nomor + nama scene + waktu).

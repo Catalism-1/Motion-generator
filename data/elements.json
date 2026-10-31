@@ -1,0 +1,346 @@
+{
+  "version": 1,
+  "doc": "sources/05-motion-untuk-editan-video.md",
+  "elements": [
+    {
+      "id": "caption-kata",
+      "name": "Caption kata-per-kata",
+      "group": "Teks & caption",
+      "desc": "Subtitle yang menyorot kata yang sedang diucapkan",
+      "styles": [
+        "kinetic-type",
+        "poster-pop",
+        "brutalist"
+      ],
+      "sfx": "tanpa / tick halus",
+      "export": "overlay"
+    },
+    {
+      "id": "keyword-highlight",
+      "name": "Highlight kata kunci",
+      "group": "Teks & caption",
+      "desc": "Kata kunci diberi kotak/warna/ukuran besar",
+      "styles": [
+        "kinetic-type",
+        "flat"
+      ],
+      "sfx": "pop",
+      "export": "overlay"
+    },
+    {
+      "id": "emoji-pop",
+      "name": "Emoji pop",
+      "group": "Teks & caption",
+      "desc": "Emoji muncul memantul di momen emosional",
+      "styles": [
+        "flat",
+        "opus-showreel"
+      ],
+      "sfx": "pop",
+      "export": "overlay"
+    },
+    {
+      "id": "hook-title",
+      "name": "Teks hook / judul",
+      "group": "Teks & caption",
+      "desc": "Teks besar di 0–3 detik pertama",
+      "styles": [
+        "poster-pop",
+        "kinetic-type",
+        "glitch"
+      ],
+      "sfx": "whoosh + hit",
+      "export": "overlay"
+    },
+    {
+      "id": "text-behind",
+      "name": "Teks di belakang subjek",
+      "group": "Teks & caption",
+      "desc": "Teks di belakang orang/objek (butuh mask subjek)",
+      "styles": [
+        "swiss",
+        "kinetic-type"
+      ],
+      "sfx": "whoosh",
+      "export": "overlay"
+    },
+    {
+      "id": "quote-card",
+      "name": "Kartu kutipan",
+      "group": "Teks & caption",
+      "desc": "Kutipan di kartu untuk podcast/motivasi",
+      "styles": [
+        "glass",
+        "paper-cutout",
+        "editorial-paper"
+      ],
+      "sfx": "shimmer",
+      "export": "overlay"
+    },
+    {
+      "id": "lower-third",
+      "name": "Lower third",
+      "group": "Overlay info",
+      "desc": "Nama/jabatan/lokasi di bagian bawah layar",
+      "styles": [
+        "swiss",
+        "glass",
+        "graphite-ui"
+      ],
+      "sfx": "swoosh pelan",
+      "export": "overlay"
+    },
+    {
+      "id": "callout",
+      "name": "Callout / panah",
+      "group": "Overlay info",
+      "desc": "Panah + label menunjuk bagian gambar",
+      "styles": [
+        "flat",
+        "hand-drawn",
+        "blueprint"
+      ],
+      "sfx": "ui click",
+      "export": "overlay"
+    },
+    {
+      "id": "circle-scribble",
+      "name": "Coretan lingkaran",
+      "group": "Overlay info",
+      "desc": "Lingkari atau garis bawahi sesuatu di footage",
+      "styles": [
+        "hand-drawn",
+        "ink-line"
+      ],
+      "sfx": "pencil scratch",
+      "export": "overlay"
+    },
+    {
+      "id": "infographic",
+      "name": "Infografis (chart)",
+      "group": "Overlay info",
+      "desc": "Bar/lingkaran chart, papan skor",
+      "styles": [
+        "editorial-paper",
+        "dataviz",
+        "midnight-grid"
+      ],
+      "sfx": "data blip",
+      "export": "overlay"
+    },
+    {
+      "id": "counter",
+      "name": "Counter angka",
+      "group": "Overlay info",
+      "desc": "Angka berjalan 0 → target",
+      "styles": [
+        "editorial-paper",
+        "dataviz",
+        "poster-pop"
+      ],
+      "sfx": "tick + ding",
+      "export": "overlay"
+    },
+    {
+      "id": "progress-bar",
+      "name": "Progress bar / bab",
+      "group": "Overlay info",
+      "desc": "Posisi di video, penanda pindah bab",
+      "styles": [
+        "swiss",
+        "flat",
+        "graphite-ui"
+      ],
+      "sfx": "click",
+      "export": "overlay"
+    },
+    {
+      "id": "map-route",
+      "name": "Peta / rute",
+      "group": "Overlay info",
+      "desc": "Garis rute A → B, zoom ke lokasi",
+      "styles": [
+        "flat",
+        "isometric",
+        "blueprint"
+      ],
+      "sfx": "whoosh panjang",
+      "export": "full"
+    },
+    {
+      "id": "timeline",
+      "name": "Timeline",
+      "group": "Overlay info",
+      "desc": "Titik waktu bermunculan",
+      "styles": [
+        "swiss",
+        "editorial-paper",
+        "paper-cutout"
+      ],
+      "sfx": "tick",
+      "export": "overlay"
+    },
+    {
+      "id": "listicle-number",
+      "name": "Nomor listicle",
+      "group": "Overlay info",
+      "desc": "#5 … #1 untuk video top-N",
+      "styles": [
+        "poster-pop",
+        "brutalist",
+        "kinetic-type"
+      ],
+      "sfx": "hit",
+      "export": "overlay"
+    },
+    {
+      "id": "zoom-punch",
+      "name": "Zoom punch-in",
+      "group": "Transisi & ritme",
+      "desc": "Zoom cepat di momen penting (dipakai konsisten)",
+      "styles": [
+        "opus-showreel",
+        "poster-pop"
+      ],
+      "sfx": "hit / bass",
+      "export": "full"
+    },
+    {
+      "id": "whip-transition",
+      "name": "Whip / whoosh transition",
+      "group": "Transisi & ritme",
+      "desc": "Pindah scene dengan blur gerak",
+      "styles": [
+        "opus-showreel",
+        "kinetic-type"
+      ],
+      "sfx": "whoosh",
+      "export": "overlay"
+    },
+    {
+      "id": "shape-wipe",
+      "name": "Shape / mask wipe",
+      "group": "Transisi & ritme",
+      "desc": "Bentuk menutup layar lalu membuka scene baru",
+      "styles": [
+        "flat",
+        "risograph",
+        "swiss"
+      ],
+      "sfx": "swoosh",
+      "export": "overlay"
+    },
+    {
+      "id": "glitch-transition",
+      "name": "Transisi glitch",
+      "group": "Transisi & ritme",
+      "desc": "Cut digital sesaat",
+      "styles": [
+        "glitch"
+      ],
+      "sfx": "glitch burst",
+      "export": "overlay"
+    },
+    {
+      "id": "ui-walkthrough",
+      "name": "Walkthrough UI aplikasi",
+      "group": "Produk & brand",
+      "desc": "Rekaman layar + kursor + callout zoom + label fitur",
+      "styles": [
+        "graphite-ui",
+        "glass",
+        "midnight-grid"
+      ],
+      "sfx": "ui click",
+      "export": "full"
+    },
+    {
+      "id": "floating-cards",
+      "name": "Kartu UI melayang",
+      "group": "Produk & brand",
+      "desc": "Dashboard/kartu melayang untuk hero",
+      "styles": [
+        "glass",
+        "graphite-ui",
+        "3d"
+      ],
+      "sfx": "airy whoosh",
+      "export": "full"
+    },
+    {
+      "id": "product-3d",
+      "name": "Reveal produk 3D",
+      "group": "Produk & brand",
+      "desc": "Produk berputar dari semua sudut",
+      "styles": [
+        "3d",
+        "particle-field"
+      ],
+      "sfx": "sub boom",
+      "export": "full"
+    },
+    {
+      "id": "logo-reveal",
+      "name": "Logo reveal / end card",
+      "group": "Produk & brand",
+      "desc": "Penutup dengan logo + CTA",
+      "styles": [
+        "ink-line",
+        "particle-field",
+        "opus-showreel"
+      ],
+      "sfx": "riser + impact",
+      "export": "full"
+    },
+    {
+      "id": "price-tag",
+      "name": "Harga / diskon",
+      "group": "Produk & brand",
+      "desc": "Harga muncul, harga lama dicoret",
+      "styles": [
+        "poster-pop",
+        "flat",
+        "brutalist"
+      ],
+      "sfx": "cash ding",
+      "export": "overlay"
+    },
+    {
+      "id": "before-after",
+      "name": "Before / after slider",
+      "group": "Produk & brand",
+      "desc": "Perbandingan dengan garis geser",
+      "styles": [
+        "swiss",
+        "flat"
+      ],
+      "sfx": "swoosh",
+      "export": "full"
+    },
+    {
+      "id": "testimonial",
+      "name": "Kartu testimoni",
+      "group": "Produk & brand",
+      "desc": "Ulasan + bintang",
+      "styles": [
+        "glass",
+        "editorial-paper"
+      ],
+      "sfx": "shimmer",
+      "export": "overlay"
+    },
+    {
+      "id": "checklist",
+      "name": "Checklist fitur",
+      "group": "Produk & brand",
+      "desc": "Centang muncul satu per satu",
+      "styles": [
+        "graphite-ui",
+        "flat",
+        "swiss"
+      ],
+      "sfx": "click",
+      "export": "overlay"
+    }
+  ]
+}

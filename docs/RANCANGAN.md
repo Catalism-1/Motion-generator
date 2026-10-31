@@ -86,3 +86,18 @@ sources/          riset
 - Tombol "kirim ke Claude" langsung dari dashboard (butuh server lokal + API key).
 - Library SFX lokal hasil unduhan agent (`sfx/`), bisa dipakai ulang.
 - Preview storyboard dari kode film yang sudah dibuat Claude.
+
+---
+
+## Update v2: UI lebih mudah (lihat `sources/06-riset-ui-claude-dan-workflow.md`)
+
+| v1 | v2 |
+|---|---|
+| Wizard 5 tab + sidebar, semua field terlihat | Satu halaman mengalir: **kotak ide → template → style → detail cepat → salin** |
+| Harus isi scene manual | Scene **otomatis** dari template / "kata-kata di layar" (satu baris = satu scene); editor scene di "Pengaturan lanjutan" |
+| 14 style tanpa panduan | 22 style + filter "cocok untuk" + label **Rekomendasi** |
+| Hanya video full | Mode **Elemen untuk editan** (27 elemen) + ekspor transparan / green screen |
+| Markdown selalu tampil | Tombol besar **Salin prompt**; markdown di "Lihat isi prompt" |
+| Desktop saja | Responsif HP: bar bawah "Salin prompt", target sentuh ≥ 44 px |
+
+Frontmatter brief v2 menambah: `mode`, `element`, `loop`, `export`.

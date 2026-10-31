@@ -59,8 +59,10 @@
       .sort((a, b) => a.t - b.t);
   }
 
-  function build(state, styles) {
+  function build(state, styles, elements = []) {
     const p = state.project, st = state.style, snd = state.sound, o = state.output;
+    const overlay = p.mode === "overlay";
+    const el = overlay ? elements.find((e) => e.id === p.element) : null;
     const style = styles.find((s) => s.id === st.id) || styles[0];
     const slug = p.slug || slugify(p.title);
     const tl = timeline(state);
@@ -71,7 +73,9 @@
     const L = [];
 
     L.push("---");
-    L.push("generator: motion-generator/v1");
+    L.push("generator: motion-generator/v2");
+    L.push(`mode: ${overlay ? "overlay" : "full"}`);
+    if (el) L.push(`element: ${el.id}`);
     L.push(`slug: ${slug}`);
     L.push(`title: ${yamlStr(p.title || "Untitled")}`);
     L.push(`style: ${style.id}`);
@@ -81,6 +85,8 @@
     L.push(`bpm: ${p.bpm}`);
     L.push(`language: ${p.lang}`);
     L.push(`output: ${o.format}`);
+    L.push(`loop: ${!!p.loop}`);
+    L.push(`export: ${overlay ? (o.alpha === "greenscreen" ? "greenscreen" : "alpha") : "mp4"}`);
     L.push("---", "");
     L.push(`# Motion Brief: ${p.title || "Untitled"}`, "");
     L.push("> Brief ini dibuat oleh dashboard Motion Generator. Kerjakan dengan skill `motion-generator`.",
@@ -88,6 +94,7 @@
 
     L.push("## 1. Brief", "");
     L.push(p.brief?.trim() || "_(tidak ada brief, buat showreel bebas yang menunjukkan kemampuan motion design)_", "");
+    if (p.template) L.push(`**Template:** ${p.template}`, "");
     if (p.audience?.trim()) L.push(`**Audiens:** ${p.audience.trim()}`, "");
 
     L.push("## 2. Spesifikasi teknis", "");
@@ -98,11 +105,22 @@
     L.push(`| Tempo | ${p.bpm} BPM (1 beat = ${f2(60 / p.bpm)} s, 1 bar = ${f2(240 / p.bpm)} s) |`);
     L.push(`| Bahasa teks | ${p.lang} |`);
     L.push(`| Format kode | ${FORMAT[o.format]} |`);
+    L.push(`| Jenis | ${overlay ? "Elemen untuk editan (overlay di atas footage)" : "Video full"} |`);
+    L.push(`| Loop | ${p.loop ? "ya: frame terakhir = frame pertama" : "tidak"} |`);
+    if (overlay) L.push(`| Ekspor | ${o.alpha === "greenscreen" ? "latar hijau #00FF00 polos untuk chroma key" : "latar transparan: MOV ProRes 4444 + WebM VP9 alpha"} |`);
     L.push("");
     if (Math.abs(total - dur) > 0.05) {
       L.push(`> ⚠️ Total scene = **${f2(total)} s**, durasi target = **${dur} s**. Sesuaikan panjang scene secara proporsional agar pas ${dur} s, dengan cut tetap di beat.`, "");
     }
 
+    if (el) {
+      L.push(`## 2b. Elemen: ${el.name}`, "");
+      L.push(`${el.desc}. Kelompok: ${el.group}.`, "");
+      L.push("- Elemen ini akan **ditumpuk di atas footage** di editor video (CapCut / Premiere / DaVinci). Jangan gambar latar penuh.");
+      L.push("- Sisakan area aman; jangan menutupi wajah atau zona caption bawah (kecuali elemen ini adalah caption).");
+      L.push("- Buat bagian yang bisa diganti (teks, warna) jadi variabel di atas file, supaya mudah dipakai ulang.");
+      L.push(`- Struktur waktu: **masuk → tahan → keluar**. Saran SFX: ${el.sfx}.`, "");
+    }
     L.push(`## 3. Style: ${style.name}`, "");
     L.push(`${style.summary}.`, "");
     L.push(`- **Palet:** ${palette.map((c) => "`" + c + "`").join(" ")} (urutan: latar, utama, sekunder, aksen…)`);
@@ -110,6 +128,7 @@
     L.push(`- **Intensitas gerak:** ${st.intensity}/5 (${INTENSITY[st.intensity]})`);
     L.push(`- **Aturan gerak:** ${style.motion.join("; ")}`);
     L.push(`- **Hindari:** ${(style.avoid || []).join("; ")}`);
+    if (style.credit) L.push(`- **Asal style:** ${style.credit}`);
     L.push(`- **Engine yang disarankan:** ${style.engine}`);
     L.push(`- **Referensi:** \`sources/02-katalog-style.md\` bagian "${style.name}", dan \`sources/03-prinsip-gerak.md\``);
     if (st.notes?.trim()) L.push(`- **Catatan style dari user:** ${st.notes.trim()}`);
@@ -132,6 +151,9 @@
     L.push("];", "```", "");
 
     L.push("## 6. Rencana suara", "");
+    if (snd.preset === "none") {
+      L.push("- **Tanpa suara.** Timeline HITS hanya dipakai untuk aksen visual. Jangan buat/unduh audio apa pun.", "");
+    } else {
     L.push(`- **Musik:** ${MUSIC[snd.music]}${snd.music === "file" && snd.musicFile ? ` → \`${snd.musicFile}\`` : ""}${snd.musicMood?.trim() ? ` · mood: ${snd.musicMood.trim()}` : ""}`);
     L.push(`- **Mode SFX:** ${SFX_MODE[snd.sfxMode]}`);
     if (snd.sfxMode !== "synth") {
@@ -141,13 +163,16 @@
     L.push(`- **Kategori SFX yang dipakai:** ${(snd.categories || []).join(", ") || "semua"}`);
     L.push(`- **Karakter SFX style ini:** ${style.sfx.join(", ")}`);
     L.push("- **Mix:** musik di bawah SFX; target loudness sekitar −14 LUFS; SFX tidak boleh clipping.", "");
+    }
 
     L.push("## 7. Deliverables", "");
     L.push(`Semua di \`films/${slug}/\`:`, "");
     L.push(`- [ ] Kode film (${FORMAT[o.format]})`);
-    L.push("- [ ] `audio/` berisi SFX yang dipakai + `CREDITS.md`");
+    if (snd.preset !== "none") L.push("- [ ] `audio/` berisi SFX yang dipakai + `CREDITS.md`");
     if (o.storyboard) L.push("- [ ] `storyboard.png`: contact sheet 1 frame per scene (sketsa untuk direview)");
-    if (o.mp4) L.push(`- [ ] \`out/${slug}.mp4\` (${p.aspect}, ${p.fps} fps, dengan audio)`);
+    if (o.mp4 && !overlay) L.push(`- [ ] \`out/${slug}.mp4\` (${p.aspect}, ${p.fps} fps, dengan audio)`);
+    if (o.mp4 && overlay && o.alpha !== "greenscreen") L.push(`- [ ] \`out/${slug}.mov\` (ProRes 4444, alpha) + \`out/${slug}.webm\` (VP9 alpha) + \`out/${slug}_sfx.wav\` terpisah`);
+    if (o.mp4 && overlay && o.alpha === "greenscreen") L.push(`- [ ] \`out/${slug}_greenscreen.mp4\` (latar #00FF00) + \`out/${slug}_sfx.wav\``);
     L.push("");
     if (o.extra?.trim()) { L.push("### Catatan tambahan dari user", "", o.extra.trim(), ""); }
 
@@ -156,6 +181,8 @@
     L.push("- [ ] Semua cut & aksen jatuh di waktu pada Timeline HITS (toleransi ±1 frame).");
     L.push("- [ ] Palet hanya dari §3; aturan \"Hindari\" dipatuhi.");
     L.push("- [ ] Teks terbaca di layar HP (cek di setengah ukuran).");
+    if (p.loop) L.push("- [ ] Loop mulus: frame terakhir menyambung ke frame pertama tanpa lompatan.");
+    if (overlay) L.push("- [ ] Latar benar-benar transparan / hijau polos; cek dengan menumpuk di atas footage contoh.");
     L.push("- [ ] Tidak ada SFX tanpa lisensi yang jelas.");
     L.push("- [ ] Storyboard dikirim ke user sebelum render final (kalau diminta).");
     L.push("");

@@ -246,6 +246,126 @@
     txt(ctx, short(text), W / 2 + shake, H * 0.42, W * 0.16, fg, "Impact, 'Arial Black', sans-serif", 900);
   };
 
+
+  // ---- styles adapted from claude-video-2 (MIT) ----
+  P["poster-pop"] = (ctx, t, W, H, c, text) => {
+    const words = short(text).split(/\s+/).filter(Boolean); const beat = Math.floor(t * 2); const flip = beat % 4 === 3;
+    bg(ctx, W, H, flip ? c[1] : c[0]);
+    const w = words[beat % words.length] || "POP", k = clamp((t * 2 % 1) / 0.4), slam = easeOut(k * 2);
+    const jolt = Math.max(0, 1 - k * 4) * 6;
+    ctx.save(); ctx.translate(0, jolt);
+    ctx.font = `900 ${H * 0.8}px 'League Gothic', Impact, 'Arial Narrow', sans-serif`;
+    ctx.fillStyle = flip ? c[0] : c[1]; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    const sc = Math.min(1, (W * 1.15) / Math.max(1, ctx.measureText(w).width));
+    ctx.translate(W / 2 + (1 - slam) * W, H / 2); ctx.scale(sc, 1); ctx.fillText(w, 0, H * 0.04); ctx.restore();
+  };
+
+  P["risograph"] = (ctx, t, W, H, c, text) => {
+    bg(ctx, W, H, c[0]);
+    const beat = Math.floor(t * 2), k = (t * 2) % 1, stamp = 1 + 0.12 * Math.max(0, 1 - k * 4), off = 3 + 4 * Math.max(0, 1 - k * 3);
+    ctx.globalCompositeOperation = "multiply";
+    ctx.fillStyle = c[2]; for (let i = 0; i < 6; i++) ctx.fillRect(((i * 0.18 + (beat % 2) * 0.09) % 1.1) * W, 0, W * 0.05, H);
+    ctx.save(); ctx.translate(W / 2, H / 2); ctx.scale(stamp, stamp); ctx.rotate((rnd(beat) - 0.5) * 0.04);
+    txt(ctx, short(text), off, off, W * 0.12, c[2], "'Archivo Black', 'Arial Black', sans-serif", 900);
+    txt(ctx, short(text), 0, 0, W * 0.12, c[1], "'Archivo Black', 'Arial Black', sans-serif", 900);
+    ctx.restore(); ctx.globalCompositeOperation = "source-over";
+    for (let i = 0; i < 500; i++) { ctx.fillStyle = `rgba(0,0,0,${rnd(i) * 0.07})`; ctx.fillRect(rnd(i * 3.1) * W, rnd(i * 7.3) * H, 1.2, 1.2); }
+  };
+
+  P["blueprint"] = (ctx, t, W, H, c, text) => {
+    bg(ctx, W, H, c[0]); const u = t % LOOP;
+    ctx.strokeStyle = c[2]; ctx.lineWidth = 1;
+    for (let x = 0; x < W; x += 12) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+    for (let y = 0; y < H; y += 12) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+    ctx.strokeStyle = c[1]; ctx.lineWidth = 2; const p = easeInOut(u / 1.2);
+    const r = Math.min(W, H) * 0.22, cx = W * 0.42, cy = H * 0.52;
+    ctx.beginPath(); ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * p); ctx.stroke();
+    ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.arc(cx, cy, r * 0.5 * easeInOut((u - 0.6) / 0.8), 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+    const fill = easeOut((u - 1.6) / 0.6);
+    ctx.fillStyle = c[3]; ctx.fillRect(cx - r * 0.18, cy + r * 0.18 - r * 0.36 * fill, r * 0.36, r * 0.36 * fill);
+    const lp = easeOut((u - 1.2) / 0.5); ctx.strokeStyle = fill > 0.5 ? c[3] : c[1];
+    ctx.beginPath(); ctx.moveTo(cx + r * 0.2, cy); ctx.lineTo(cx + r * 0.2 + (W * 0.25) * lp, cy - H * 0.15 * lp); ctx.stroke();
+    if (lp > 0.9) txt(ctx, short(text), cx + r * 0.25 + W * 0.25, cy - H * 0.15, W * 0.035, fill > 0.5 ? c[3] : c[1], "'IBM Plex Mono', ui-monospace, monospace", 600, "left");
+  };
+
+  P["midnight-grid"] = (ctx, t, W, H, c, text) => {
+    bg(ctx, W, H, c[0]); const u = t % LOOP;
+    ctx.fillStyle = "#1E2A44"; for (let x = 10; x < W; x += 20) for (let y = 10; y < H; y += 20) ctx.fillRect(x, y, 2, 2);
+    const nodes = [[0.18, 0.5], [0.42, 0.3], [0.42, 0.7], [0.72, 0.5]], links = [[0, 1], [0, 2], [1, 3], [2, 3]];
+    const active = Math.min(3, Math.floor(u / 0.8));
+    links.forEach(([a, b], i) => {
+      const k = easeInOut((u - i * 0.5) / 0.6); if (k <= 0) return;
+      const [x1, y1] = nodes[a], [x2, y2] = nodes[b];
+      ctx.strokeStyle = "#22304D"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x1 * W, y1 * H); ctx.lineTo((x1 + (x2 - x1) * k) * W, (y1 + (y2 - y1) * k) * H); ctx.stroke();
+      if (k < 1) { ctx.fillStyle = c[3]; ctx.beginPath(); ctx.arc((x1 + (x2 - x1) * k) * W, (y1 + (y2 - y1) * k) * H, 4, 0, 7); ctx.fill(); }
+    });
+    nodes.forEach(([x, y], i) => {
+      const k = easeOut((u - i * 0.4) / 0.5); if (k <= 0) return;
+      ctx.fillStyle = "#111A2E"; ctx.strokeStyle = i === active ? c[3] : "#22304D"; ctx.lineWidth = 2;
+      const w = W * 0.16, h = H * 0.14; ctx.beginPath(); ctx.roundRect(x * W - w / 2, y * H - h / 2 + (1 - k) * 10, w, h, 6); ctx.fill(); ctx.stroke();
+      txt(ctx, i === 3 ? short(text, 12) : ["INPUT", "MODEL", "TOOLS", ""][i], x * W, y * H + (1 - k) * 10, W * 0.025, i === active ? c[1] : c[2], "Inter, system-ui", 600);
+    });
+  };
+
+  P["editorial-paper"] = (ctx, t, W, H, c, text) => {
+    bg(ctx, W, H, c[0]); const u = t % LOOP;
+    const base = H * 0.82, vals = [0.3, 0.42, 0.38, 0.5, 0.9];
+    ctx.strokeStyle = "#E3D3C3"; ctx.lineWidth = 1; for (let i = 0; i < 4; i++) { const y = base - i * H * 0.15; ctx.beginPath(); ctx.moveTo(W * 0.1, y); ctx.lineTo(W * 0.9, y); ctx.stroke(); }
+    vals.forEach((v, i) => {
+      const k = easeInOut((u - 0.2 - i * 0.1) / 1.4), h = v * H * 0.55 * k;
+      ctx.fillStyle = i === 4 ? c[3] : (u > 2.2 ? "#E3D3C3" : c[1]); ctx.fillRect(W * 0.14 + i * W * 0.15, base - h, W * 0.09, h);
+    });
+    const n = Math.round(90 * easeInOut((u - 0.6) / 1.4));
+    txt(ctx, n + "%", W * 0.14 + 4 * W * 0.15 + W * 0.045, base - vals[4] * H * 0.55 * easeInOut((u - 0.6) / 1.4) - H * 0.06, W * 0.05, c[3], "'Playfair Display', Georgia, serif", 900);
+    txt(ctx, (text || "Apa kata angka").slice(0, 28), W * 0.1, H * 0.12, W * 0.045, c[1], "'Playfair Display', Georgia, serif", 700, "left");
+  };
+
+  P["graphite-ui"] = (ctx, t, W, H, c, text) => {
+    bg(ctx, W, H, c[0]); const u = t % LOOP;
+    const pan = easeInOut(u / 1.2) * 20, x0 = W * 0.38 - pan, y0 = H * 0.14, pw = W * 0.7, ph = H * 0.72;
+    ctx.fillStyle = "#17181C"; ctx.strokeStyle = "#26282E"; ctx.lineWidth = 1; ctx.beginPath(); ctx.roundRect(x0, y0, pw, ph, 12); ctx.fill(); ctx.stroke();
+    for (let i = 0; i < 4; i++) {
+      const y = y0 + 24 + i * ph * 0.2, done = u > 1.6 + i * 0.25;
+      ctx.strokeStyle = done ? c[3] : "#3A3D45"; ctx.lineWidth = 2; ctx.strokeRect(x0 + 18, y, 12, 12);
+      if (done) { ctx.fillStyle = c[3]; ctx.fillRect(x0 + 18, y, 12, 12); }
+      ctx.fillStyle = done ? "#3A3D45" : "#2A2C33"; ctx.fillRect(x0 + 42, y + 2, pw * (0.35 + rnd(i) * 0.3), 8);
+    }
+    ctx.save(); ctx.beginPath(); ctx.rect(W * 0.06, H * 0.4, W * 0.3, H * 0.2); ctx.clip();
+    const m = easeOut((u - 0.3) / 0.6); txt(ctx, (text || "Ship faster").slice(0, 16), W * 0.06, H * 0.5 + (1 - m) * H * 0.2, W * 0.04, c[1], "Inter, system-ui", 600, "left"); ctx.restore();
+    const cx = x0 + 24 + (1 - easeInOut((u - 1.0) / 0.6)) * 80, cy = y0 + 30; ctx.fillStyle = c[3]; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + 10, cy + 12); ctx.lineTo(cx + 3, cy + 12); ctx.fill();
+  };
+
+  P["ink-line"] = (ctx, t, W, H, c) => {
+    bg(ctx, W, H, c[0]); const u = t % LOOP, boil = Math.floor(t * 7.5);
+    const prog = easeInOut(u / 2.4), N = 140;
+    ctx.strokeStyle = c[1]; ctx.lineCap = "round";
+    for (let i = 1; i <= N * prog; i++) {
+      const f = (k) => { const a = (k / N) * Math.PI * 3.2; const r = Math.min(W, H) * (0.08 + 0.22 * (k / N)); return [W / 2 + Math.cos(a) * r * 1.2 + (rnd(k + boil * 31) - 0.5) * 1.6, H / 2 + Math.sin(a) * r + (rnd(k * 3 + boil) - 0.5) * 1.6]; };
+      const [x1, y1] = f(i - 1), [x2, y2] = f(i); ctx.lineWidth = 1 + 5 * Math.sin((i / N) * Math.PI); ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    }
+    const s = clamp((u - 2.8) / 0.2); if (s > 0) {
+      const sc = 1.22 - 0.22 * s, sz = Math.min(W, H) * 0.12; ctx.save(); ctx.translate(W * 0.8, H * 0.78); ctx.scale(sc, sc);
+      ctx.fillStyle = c[3]; ctx.fillRect(-sz / 2, -sz / 2, sz, sz); txt(ctx, "動", 0, 2, sz * 0.62, c[0], "'Noto Serif JP', serif", 600); ctx.restore();
+    }
+  };
+
+  P["particle-field"] = (ctx, t, W, H, c, text) => {
+    const g = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, W * 0.7); g.addColorStop(0, c[2]); g.addColorStop(1, "#060912");
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    const u = t % LOOP, k = easeInOut(clamp((u - 0.4) / 1.6)) * (1 - easeInOut(clamp((u - 3.2) / 0.8))), R = Math.min(W, H) * 0.3;
+    for (let i = 0; i < 700; i++) {
+      const sx = rnd(i) * W, sy = rnd(i + 0.5) * H;
+      const th = rnd(i * 1.7) * Math.PI * 2, ph = Math.acos(2 * rnd(i * 2.3) - 1), rot = t * 0.4;
+      const X = Math.sin(ph) * Math.cos(th + rot), Z = Math.sin(ph) * Math.sin(th + rot), Y = Math.cos(ph);
+      const tx = W / 2 + X * R, ty = H / 2 + Y * R;
+      const sw = Math.sin(t * 1.3 + i) * 30 * (1 - k);
+      const x = sx + (tx - sx) * k + sw, y = sy + (ty - sy) * k + Math.cos(t + i) * 20 * (1 - k);
+      const depth = 0.5 + 0.5 * Z * k;
+      ctx.fillStyle = i % 20 === 0 ? c[3] : c[1]; ctx.globalAlpha = 0.35 + 0.6 * depth; ctx.fillRect(x, y, 1 + depth * 1.4, 1 + depth * 1.4);
+    }
+    ctx.globalAlpha = 1;
+  };
+
   window.STYLE_PREVIEWS = P;
   window.drawStylePreview = function (id, ctx, t, W, H, palette, text) {
     const fn = P[id] || P["opus-showreel"];
