@@ -1,0 +1,2493 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Motion Generator</title>
+  <style>
+/* Claude-inspired look (tokens from sources/06): ivory, slate ink, Claude terracotta, serif headings */
+:root {
+  --bg: #FAF9F5;
+  --bg-2: #F3F1EA;
+  --surface: #FFFFFF;
+  --ink: #141413;
+  --ink-2: #5E5D59;
+  --ink-3: #8F8D86;
+  --line: #E8E5DC;
+  --line-2: #D9D5C9;
+  --accent: #D97757;
+  --accent-ink: #C6613F;
+  --accent-soft: #F6E8E1;
+  --blue: #6A9BCC;
+  --green: #788C5D;
+  --r: 16px;
+  --serif: "Anthropic Serif", "Tiempos Text", ui-serif, Georgia, Cambria, serif;
+  --sans: "Anthropic Sans", Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: "Anthropic Mono", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  --shadow: 0 1px 2px rgba(20,20,19,.04), 0 4px 16px rgba(20,20,19,.05);
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--sans); -webkit-font-smoothing: antialiased; }
+h1, h2, h3 { font-family: var(--serif); font-weight: 400; margin: 0; letter-spacing: -0.01em; }
+code { font-family: var(--mono); font-size: 13px; background: var(--bg-2); padding: 1px 6px; border-radius: 6px; }
+button { font: inherit; color: inherit; }
+
+/* top bar */
+.topbar { height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; position: sticky; top: 0; z-index: 20; background: rgba(250,249,245,.88); backdrop-filter: blur(8px); }
+.brand { display: flex; align-items: center; gap: 9px; }
+.spark { width: 22px; height: 22px; stroke: var(--accent); stroke-width: 2.6; stroke-linecap: round; fill: none; }
+.brand-name { font-family: var(--serif); font-size: 19px; }
+.top-right { display: flex; align-items: center; gap: 10px; }
+.saved { font-size: 12.5px; color: var(--ink-3); }
+.icon-btn { width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; font-size: 18px; line-height: 1; }
+.menu { position: relative; }
+.menu-pop { position: absolute; right: 0; top: 42px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); padding: 6px; min-width: 210px; display: flex; flex-direction: column; }
+.menu-pop button { all: unset; cursor: pointer; padding: 9px 12px; border-radius: 8px; font-size: 14px; }
+.menu-pop button:hover { background: var(--bg-2); }
+.menu-pop .danger { color: #B42318; }
+
+/* layout */
+.wrap { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 32px; max-width: 1240px; margin: 0 auto; padding: 8px 24px 120px; }
+.flow { min-width: 0; }
+.side { position: relative; }
+.side .card { position: sticky; top: 72px; }
+@media (max-width: 980px) {
+  .wrap { grid-template-columns: 1fr; padding: 8px 16px 110px; }
+  .side .card { position: static; }
+  .side [data-copy] { display: none; }
+}
+
+/* hero */
+.hero { padding: 36px 0 12px; }
+.greet { font-size: clamp(30px, 4.4vw, 42px); text-align: center; margin-bottom: 22px; }
+.composer { background: var(--surface); border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow); padding: 14px 14px 10px; transition: border-color .15s, box-shadow .15s; }
+.composer:focus-within { border-color: var(--line-2); box-shadow: 0 0 0 4px rgba(217,119,87,.10), var(--shadow); }
+.composer textarea { width: 100%; border: 0; outline: 0; resize: none; font: 16px/1.5 var(--sans); background: transparent; padding: 4px 6px; color: var(--ink); }
+.composer-bar { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-top: 6px; }
+.title-input { flex: 1; min-width: 180px; }
+.composer .title-input { border: 0; background: var(--bg); border-radius: 10px; padding: 9px 12px; font-size: 14px; }
+.mode { display: inline-flex; background: var(--bg); border-radius: 12px; padding: 3px; }
+.mode button { border: 0; background: transparent; padding: 8px 12px; border-radius: 9px; cursor: pointer; font-size: 13.5px; color: var(--ink-2); min-height: 38px; }
+.mode button.on { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+.tpl-label { color: var(--ink-3); font-size: 13px; margin: 22px 0 10px; text-align: center; }
+.templates { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.tpl { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 7px 14px 7px 8px; cursor: pointer; font-size: 14px; min-height: 44px; transition: border-color .15s, background .15s, transform .15s; }
+.tpl:hover { border-color: var(--line-2); transform: translateY(-1px); }
+.tpl.on { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-ink); }
+.tpl .ic { width: 28px; height: 28px; display: grid; place-items: center; background: var(--bg-2); border-radius: 50%; font-size: 14px; }
+
+/* blocks */
+.block { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 24px; margin-top: 22px; }
+@media (max-width: 640px) { .block { padding: 18px 16px; } }
+.block-head { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 18px; }
+.block-head .n { flex: none; width: 30px; height: 30px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; font-size: 14px; font-weight: 600; margin-top: 2px; }
+.block-head h2 { font-size: 24px; }
+.block-head p { margin: 2px 0 0; color: var(--ink-2); font-size: 14px; }
+.rec-inline { color: var(--accent-ink); font-weight: 600; }
+
+/* chips */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chips button, .filters button { border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 9px 14px; cursor: pointer; font-size: 14px; min-height: 44px; transition: border-color .15s, background .15s; }
+.chips button small { color: var(--ink-3); font-size: 12px; margin-left: 4px; }
+.chips button:hover, .filters button:hover { border-color: var(--line-2); }
+.chips button.on, .filters button.on { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-ink); }
+.chips button.on small { color: var(--accent-ink); opacity: .8; }
+.filters { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 12px; scrollbar-width: thin; }
+.filters button { border-radius: 999px; padding: 6px 13px; min-height: 36px; font-size: 13px; white-space: nowrap; }
+
+/* style grid */
+.style-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 12px; }
+@media (max-width: 640px) { .style-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } }
+.style-card { position: relative; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--bg); cursor: pointer; text-align: left; padding: 0; transition: transform .15s, box-shadow .15s, border-color .15s; }
+.style-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+.style-card.on { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(217,119,87,.22); }
+.style-card canvas { display: block; width: 100%; aspect-ratio: 16 / 10; }
+.style-card .meta { padding: 9px 11px 11px; }
+.style-card b { display: block; font-size: 14px; font-weight: 600; }
+.style-card small { color: var(--ink-3); font-size: 12px; }
+.style-card .rec { position: absolute; top: 8px; left: 8px; background: var(--accent); color: #fff; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; }
+.style-card .tick { position: absolute; top: 8px; right: 8px; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: #fff; display: none; place-items: center; font-size: 13px; }
+.style-card.on .tick { display: grid; }
+.style-detail { margin-top: 14px; background: var(--bg); border-radius: 12px; padding: 14px 16px; font-size: 14px; color: var(--ink-2); }
+.style-detail b { color: var(--ink); }
+.style-detail ul { margin: 6px 0 0; padding-left: 18px; }
+
+/* elements */
+.el-group { margin-bottom: 16px; }
+.el-group h4 { font: 600 12px var(--sans); text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); margin: 0 0 8px; }
+.el-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+.el { text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 11px 13px; cursor: pointer; min-height: 44px; }
+.el b { display: block; font-size: 14px; font-weight: 600; }
+.el small { color: var(--ink-3); font-size: 12.5px; }
+.el.on { border-color: var(--accent); background: var(--accent-soft); }
+
+/* quick questions */
+.q { padding: 14px 0; border-top: 1px solid var(--line); }
+.q:first-of-type { border-top: 0; padding-top: 0; }
+.q.two { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+@media (max-width: 640px) { .q.two { grid-template-columns: 1fr; } }
+.q-label { font-weight: 600; font-size: 14px; margin-bottom: 9px; }
+.opt { font-weight: 400; color: var(--ink-3); font-size: 12.5px; margin-left: 4px; }
+.inline { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; color: var(--ink-2); font-size: 14px; }
+input:not([type=checkbox]):not([type=range]), textarea, select { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; outline: none; width: 100%; min-width: 0; transition: border-color .15s, box-shadow .15s, background .15s; }
+input.num { width: 84px; }
+input:focus, textarea:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(217,119,87,.14); background: #fff; }
+.composer textarea:focus, .composer .title-input:focus { box-shadow: none; border-color: transparent; }
+.composer textarea { border: 0; }
+textarea { resize: vertical; }
+input[type=range] { accent-color: var(--accent); width: 100%; }
+.palette { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.swatch { position: relative; width: 46px; height: 46px; border-radius: 12px; border: 1px solid rgba(0,0,0,.08); overflow: hidden; cursor: pointer; }
+.swatch input { position: absolute; inset: -8px; width: 64px !important; height: 64px; opacity: 0; cursor: pointer; border: 0; padding: 0; }
+
+/* advanced */
+.advanced { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 12px; }
+.advanced summary { cursor: pointer; font-weight: 600; font-size: 14px; list-style: none; padding: 8px 0; min-height: 44px; display: flex; align-items: center; }
+.advanced summary::-webkit-details-marker { display: none; }
+.advanced summary::before { content: "▸"; display: inline-block; margin-right: 8px; transition: transform .15s; color: var(--ink-3); }
+.advanced[open] summary::before { transform: rotate(90deg); }
+.advanced summary span { font-weight: 400; color: var(--ink-3); margin-left: 6px; font-size: 13px; }
+.adv-body h3 { font-size: 18px; margin: 18px 0 10px; }
+.hint { font: 400 12.5px var(--sans); color: var(--ink-3); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; }
+@media (max-width: 640px) { .grid2 { grid-template-columns: 1fr; } .span2 { grid-column: auto !important; } }
+.span2 { grid-column: span 2; }
+.field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 500; }
+.check { display: flex; gap: 8px; align-items: center; font-size: 14px; min-height: 44px; }
+.check input { width: 18px; height: 18px; accent-color: var(--accent); }
+.row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.scene { display: grid; grid-template-columns: 26px minmax(0, 1fr) 70px 112px auto; gap: 8px; align-items: end; padding: 12px; border: 1px solid var(--line); border-radius: 12px; margin-bottom: 8px; background: var(--bg); }
+.scene .idx { width: 26px; height: 26px; border-radius: 8px; background: var(--accent-soft); color: var(--accent-ink); display: grid; place-items: center; font-size: 12px; font-weight: 600; margin-bottom: 8px; }
+.scene .wide { grid-column: 2 / -1; }
+.scene .tools { display: flex; gap: 4px; }
+.scene .time { grid-column: 2 / -1; font: 11.5px var(--mono); color: var(--ink-3); }
+.scene input, .scene select, .scene textarea { background: #fff; }
+@media (max-width: 640px) { .scene { grid-template-columns: 26px 1fr 1fr; } .scene .tools { grid-column: 2 / -1; } }
+.hits { margin-top: 14px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; font-size: 13px; }
+.hit { display: grid; grid-template-columns: 64px 1fr auto; gap: 10px; padding: 7px 12px; border-top: 1px solid var(--line); align-items: center; }
+.hit:first-child { border-top: 0; }
+.hit .t { font-family: var(--mono); color: var(--ink-3); font-size: 12px; }
+.hit .c { font-size: 11.5px; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-ink); }
+
+/* buttons */
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 10px 16px; cursor: pointer; font-size: 14px; font-weight: 500; min-height: 44px; transition: background .15s, border-color .15s, transform .1s; }
+.btn:hover { border-color: var(--line-2); background: var(--bg); }
+.btn:active { transform: scale(.98); }
+.btn.ghost { background: transparent; }
+.btn.small { min-height: 36px; padding: 6px 12px; font-size: 13px; border-radius: 10px; }
+.btn.tiny { min-height: 28px; padding: 3px 9px; font-size: 12px; border-radius: 8px; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn.primary:hover { background: var(--accent-ink); border-color: var(--accent-ink); }
+.btn.big { font-size: 16px; padding: 14px 22px; min-height: 52px; border-radius: 14px; }
+.btn.full { width: 100%; }
+.btn.danger:hover { color: #B42318; }
+
+/* result */
+.result { border-color: #EBD3C7; background: linear-gradient(180deg, #FFF 0%, #FFFBF8 100%); }
+.result .n { background: var(--green); }
+.big-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.next { margin: 20px 0 6px; padding-left: 20px; color: var(--ink-2); }
+.next li { margin: 8px 0; }
+.next b { color: var(--ink); }
+.cmd { color: var(--accent-ink); }
+.mdbox { margin-top: 14px; }
+.mdbox summary { cursor: pointer; color: var(--ink-2); font-size: 14px; padding: 6px 0; min-height: 36px; }
+.md { margin: 8px 0 0; max-height: 520px; overflow: auto; padding: 14px 16px; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; font: 12.5px/1.6 var(--mono); white-space: pre-wrap; word-break: break-word; }
+.md .h { color: var(--accent-ink); font-weight: 700; }
+.md .fm { color: var(--ink-3); }
+.md .tb { color: #3F6B97; }
+.foot { color: var(--ink-3); font-size: 12.5px; text-align: center; margin-top: 26px; }
+
+/* side card */
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; box-shadow: var(--shadow); }
+.canvas-wrap { background: #1F1E1D; display: grid; place-items: center; padding: 14px; min-height: 180px; }
+.canvas-wrap canvas { max-width: 100%; border-radius: 6px; }
+.card-body { padding: 14px 16px 16px; }
+.scene-now { font-size: 12.5px; color: var(--ink-3); font-family: var(--mono); min-height: 18px; }
+.summary { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 14px; }
+.summary span { font-size: 12.5px; padding: 3px 10px; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); }
+.summary span.acc { background: var(--accent-soft); border-color: #EBD3C7; color: var(--accent-ink); }
+
+/* mobile bar */
+.mobilebar { display: none; }
+@media (max-width: 980px) {
+  .mobilebar { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; gap: 10px; align-items: center; justify-content: space-between; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); background: rgba(250,249,245,.95); backdrop-filter: blur(8px); border-top: 1px solid var(--line); }
+  .mobilebar span { font-size: 13px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}
+
+.toast { position: fixed; bottom: 86px; left: 50%; transform: translateX(-50%) translateY(16px); background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 12px; font-size: 14px; opacity: 0; transition: .25s; pointer-events: none; z-index: 40; }
+.toast.show { opacity: 1; transform: translateX(-50%); }
+
+/* mobile fixes */
+.composer .title-input { min-width: 200px; }
+@media (max-width: 640px) {
+  .saved { display: none; }
+  .composer-bar { flex-direction: column; align-items: stretch; }
+  .composer .title-input { min-width: 0; }
+  .mode { width: 100%; }
+  .mode button { flex: 1; }
+  .greet { font-size: 28px; }
+}
+
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <svg class="spark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5v5.5M12 16v5.5M2.5 12H8M16 12h5.5M5.3 5.3l3.9 3.9M14.8 14.8l3.9 3.9M5.3 18.7l3.9-3.9M14.8 9.2l3.9-3.9"/></svg>
+      <span class="brand-name">Motion Generator</span>
+    </div>
+    <div class="top-right">
+      <span class="saved" id="saved">Tersimpan otomatis</span>
+      <div class="menu">
+        <button class="icon-btn" id="menu-btn" aria-label="Menu">⋯</button>
+        <div class="menu-pop" id="menu-pop" hidden>
+          <button id="btn-export">Ekspor proyek (.json)</button>
+          <button id="btn-import">Impor proyek (.json)</button>
+          <button id="btn-reset" class="danger">Mulai dari awal</button>
+        </div>
+      </div>
+      <input type="file" id="file-import" accept="application/json" hidden />
+    </div>
+  </header>
+
+  <div class="wrap">
+    <main class="flow">
+      <!-- HERO -->
+      <section class="hero">
+        <h1 class="greet" id="greet">Mau bikin motion apa hari ini?</h1>
+        <div class="composer">
+          <textarea id="idea" rows="3" placeholder="Ceritakan idenya… mis. promo kopi susu gula aren, suasana sore hangat, buat Reels"></textarea>
+          <div class="composer-bar">
+            <input id="title" class="title-input" placeholder="Judul / nama brand (opsional)" />
+            <div class="mode" id="mode">
+              <button data-v="full">🎬 Video full</button>
+              <button data-v="overlay">🧩 Elemen untuk editan</button>
+            </div>
+          </div>
+        </div>
+        <p class="tpl-label">Atau mulai dari template:</p>
+        <div class="templates" id="templates"></div>
+      </section>
+
+      <!-- 1 STYLE -->
+      <section class="block">
+        <div class="block-head"><span class="n">1</span><div><h2>Pilih style</h2><p>Preview-nya animasi kode asli. Yang berlabel <b class="rec-inline">Rekomendasi</b> cocok dengan pilihanmu.</p></div></div>
+        <div class="filters" id="filters"></div>
+        <div class="style-grid" id="style-grid"></div>
+        <div class="style-detail" id="style-detail"></div>
+      </section>
+
+      <!-- 1b ELEMENT -->
+      <section class="block" id="block-element" hidden>
+        <div class="block-head"><span class="n">2</span><div><h2>Pilih elemen</h2><p>Elemen ini nanti ditumpuk di atas footage di CapCut / Premiere / DaVinci.</p></div></div>
+        <div id="elements"></div>
+      </section>
+
+      <!-- 2 QUICK -->
+      <section class="block">
+        <div class="block-head"><span class="n" id="n-quick">2</span><div><h2>Detail cepat</h2><p>Semua sudah diisi default. Ubah yang perlu saja.</p></div></div>
+        <div class="q">
+          <div class="q-label">Rasio</div>
+          <div class="chips" data-seg="project.aspect">
+            <button data-v="9:16">9:16 <small>Reels · TikTok</small></button><button data-v="16:9">16:9 <small>YouTube</small></button>
+            <button data-v="1:1">1:1 <small>Feed</small></button><button data-v="4:5">4:5 <small>Portrait</small></button>
+          </div>
+        </div>
+        <div class="q">
+          <div class="q-label">Durasi</div>
+          <div class="chips" data-seg="project.duration" data-num>
+            <button data-v="6">6 dtk</button><button data-v="10">10 dtk</button><button data-v="15">15 dtk</button><button data-v="30">30 dtk</button><button data-v="60">60 dtk</button>
+          </div>
+          <label class="inline">atau <input type="number" min="3" max="180" data-bind="project.duration" data-num class="num" /> detik</label>
+        </div>
+        <div class="q">
+          <div class="q-label">Kata-kata di layar <span class="opt">opsional</span></div>
+          <textarea id="lines" rows="3" placeholder="Satu baris = satu scene. Kosongkan kalau mau AI yang menulis dari idemu."></textarea>
+        </div>
+        <div class="q two">
+          <div>
+            <div class="q-label">Loop?</div>
+            <div class="chips" data-seg="project.loop" data-bool><button data-v="false">Tidak</button><button data-v="true">Ya, berulang mulus</button></div>
+          </div>
+          <div data-show="project.mode=overlay">
+            <div class="q-label">Ekspor overlay</div>
+            <div class="chips" data-seg="output.alpha"><button data-v="alpha">Transparan</button><button data-v="greenscreen">Green screen</button></div>
+          </div>
+        </div>
+        <div class="q">
+          <div class="q-label">Warna <span class="opt">klik untuk ganti</span></div>
+          <div class="palette" id="palette"></div>
+        </div>
+        <div class="q two">
+          <div>
+            <div class="q-label">Suara</div>
+            <div class="chips" data-seg="sound.preset"><button data-v="full">Musik + SFX</button><button data-v="sfx">SFX saja</button><button data-v="none">Tanpa suara</button></div>
+          </div>
+          <div data-show="sound.preset!=none">
+            <div class="q-label">SFX dari</div>
+            <div class="chips" data-seg="sound.sfxMode"><button data-v="mix">Agent cari online</button><button data-v="synth">Dibuat sendiri (sintesis)</button></div>
+          </div>
+        </div>
+
+        <details class="advanced" id="advanced">
+          <summary>Pengaturan lanjutan <span>scene, tempo, lisensi, format kode…</span></summary>
+          <div class="adv-body">
+            <h3>Scene (sketsa) <span class="hint" id="scene-total"></span></h3>
+            <div class="row">
+              <button class="btn small" id="btn-auto">↺ Kembalikan otomatis</button>
+              <button class="btn small ghost" id="btn-fit">Pas-kan ke durasi</button>
+              <button class="btn small ghost" id="btn-add">+ Scene</button>
+            </div>
+            <div id="scenes"></div>
+
+            <h3>Proyek</h3>
+            <div class="grid2">
+              <label class="field">Tempo (BPM)<input type="number" min="60" max="200" data-bind="project.bpm" data-num /></label>
+              <div class="field">FPS<div class="chips" data-seg="project.fps" data-num><button data-v="30">30</button><button data-v="60">60</button></div></div>
+              <label class="field">Bahasa teks<select data-bind="project.lang"><option>Indonesia</option><option>English</option><option>Campur</option></select></label>
+              <label class="field">Audiens<input data-bind="project.audience" placeholder="mis. Gen Z pecinta kopi" /></label>
+            </div>
+
+            <h3>Style</h3>
+            <div class="grid2">
+              <label class="field">Font<input data-bind="style.font" placeholder="kosong = default style" /></label>
+              <label class="field">Intensitas gerak <span class="hint" id="intensity-label"></span><input type="range" min="1" max="5" data-bind="style.intensity" data-num /></label>
+              <label class="field span2">Catatan style<textarea rows="2" data-bind="style.notes" placeholder="mis. logo di pojok kanan bawah, jangan pakai hijau"></textarea></label>
+            </div>
+
+            <h3>Suara</h3>
+            <div class="grid2">
+              <label class="field">Mood musik<input data-bind="sound.musicMood" placeholder="mis. lo-fi hangat" /></label>
+              <label class="field">File musik sendiri<input data-bind="sound.musicFile" placeholder="mis. assets/lagu.mp3 (opsional)" /></label>
+              <div class="field span2">Sumber online<div class="chips" data-chips="sound.sources"><button data-v="openverse">Openverse</button><button data-v="freesound">Freesound (butuh API key)</button></div></div>
+              <div class="field span2">Lisensi diizinkan<div class="chips" data-chips="sound.license"><button data-v="cc0">CC0</button><button data-v="by">CC-BY</button><button data-v="by-sa">CC-BY-SA</button></div></div>
+              <div class="field span2">Kategori SFX<div class="chips" data-chips="sound.categories">
+                <button data-v="whoosh">whoosh</button><button data-v="swoosh">swoosh</button><button data-v="hit">hit</button><button data-v="impact">impact</button>
+                <button data-v="riser">riser</button><button data-v="ui click">ui click</button><button data-v="glitch">glitch</button><button data-v="shimmer">shimmer</button></div></div>
+            </div>
+            <div class="hits" id="hits"></div>
+
+            <h3>Output</h3>
+            <div class="grid2">
+              <div class="field span2">Format kode<div class="chips" data-seg="output.format"><button data-v="html-canvas">HTML + Canvas</button><button data-v="threejs">Three.js</button><button data-v="remotion">Remotion</button></div></div>
+              <label class="check"><input type="checkbox" data-bind="output.storyboard" /> Storyboard dulu sebelum render</label>
+              <label class="check"><input type="checkbox" data-bind="output.mp4" /> Render video final</label>
+              <label class="field span2">Catatan tambahan<textarea rows="2" data-bind="output.extra"></textarea></label>
+            </div>
+          </div>
+        </details>
+      </section>
+
+      <!-- 3 RESULT -->
+      <section class="block result">
+        <div class="block-head"><span class="n">✓</span><div><h2>Prompt siap</h2><p>Tinggal salin, lalu kasih ke Claude.</p></div></div>
+        <div class="big-actions">
+          <button class="btn primary big" data-copy>Salin prompt</button>
+          <button class="btn big" id="btn-download">Download .md</button>
+        </div>
+        <ol class="next">
+          <li><b>Download .md</b> dan simpan ke folder <code>prompts/</code> di repo ini, <i>atau</i> langsung <b>Salin prompt</b>.</li>
+          <li>Buka <b>Claude Code</b> di folder repo ini.</li>
+          <li>Ketik: <code class="cmd" id="cmd">buat video dari prompts/film.md</code> <button class="btn tiny" id="copy-cmd">salin</button><br><small>atau tempel prompt yang tadi kamu salin.</small></li>
+        </ol>
+        <details class="mdbox"><summary>Lihat isi prompt</summary><pre class="md" id="md"></pre></details>
+      </section>
+      <footer class="foot">Riset & sumber ada di folder <code>sources/</code>. 8 style diadaptasi dari claude-video-2 (MIT).</footer>
+    </main>
+
+    <aside class="side">
+      <div class="card">
+        <div class="canvas-wrap"><canvas id="preview"></canvas></div>
+        <div class="card-body">
+          <div class="scene-now" id="scene-now"></div>
+          <div class="summary" id="summary"></div>
+          <button class="btn primary full" data-copy>Salin prompt</button>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <div class="mobilebar"><span id="mobile-sum"></span><button class="btn primary" data-copy>Salin prompt</button></div>
+  <div class="toast" id="toast"></div>
+
+  <script>
+// AUTO-GENERATED by scripts/build-styles.mjs from data/styles.json. Do not edit by hand.
+window.STYLE_DATA = {
+  "version": 2,
+  "doc": "sources/02-katalog-style.md",
+  "confidence_legend": {
+    "sumber": "didukung sumber",
+    "sebagian": "sebagian didukung sumber",
+    "umum": "pengetahuan desain umum, belum ada sumber"
+  },
+  "styles": [
+    {
+      "id": "opus-showreel",
+      "name": "Opus Showreel",
+      "summary": "Gaya viral default: tipografi tebal + shape + partikel + transisi cepat + logo reveal",
+      "palette": [
+        "#0A0A0A",
+        "#F5F5F5",
+        "#8A8A8A",
+        "#FF5A1F"
+      ],
+      "type": "Inter/Geist Bold",
+      "motion": [
+        "spring overshoot",
+        "mask wipe",
+        "zoom-through",
+        "cut tiap 1-2 beat"
+      ],
+      "sfx": [
+        "whoosh",
+        "impact",
+        "riser",
+        "ui click"
+      ],
+      "engine": "canvas2d",
+      "confidence": "sumber",
+      "avoid": [
+        "lebih dari 2 warna aksen",
+        "transisi lambat >1 detik",
+        "teks kecil yang tidak terbaca di HP"
+      ],
+      "sfx_query": "cinematic modern",
+      "best_for": [
+        "promo",
+        "showreel"
+      ]
+    },
+    {
+      "id": "kinetic-type",
+      "name": "Kinetic Typography",
+      "summary": "Huruf/kata bergerak: geser, fade, zoom, berubah bentuk; varian elastic type",
+      "palette": [
+        "#111111",
+        "#FFFFFF",
+        "#FFD400"
+      ],
+      "type": "Grotesk tebal / variable font",
+      "motion": [
+        "per-glyph stagger 20-40ms",
+        "scale punch kata kunci",
+        "tracking mengencang"
+      ],
+      "sfx": [
+        "typewriter tick",
+        "hit",
+        "whoosh"
+      ],
+      "engine": "canvas2d",
+      "confidence": "sumber",
+      "avoid": [
+        "terlalu banyak kata per layar",
+        "font tipis di ukuran kecil"
+      ],
+      "sfx_query": "typing whoosh",
+      "best_for": [
+        "hook",
+        "caption",
+        "promo"
+      ]
+    },
+    {
+      "id": "swiss",
+      "name": "Swiss / International",
+      "summary": "Grid matematis, asimetris, sans-serif, rata kiri",
+      "palette": [
+        "#F4F1EA",
+        "#111111",
+        "#E30613"
+      ],
+      "type": "Helvetica/Akzidenz/Inter",
+      "motion": [
+        "wipe linear sesuai grid",
+        "slide presisi",
+        "state instan, tanpa elastis"
+      ],
+      "sfx": [
+        "dry click",
+        "metronome tick",
+        "paper slide"
+      ],
+      "engine": "canvas2d",
+      "confidence": "sumber",
+      "avoid": [
+        "easing elastis/bounce",
+        "ornamen dekoratif",
+        "elemen keluar dari grid"
+      ],
+      "sfx_query": "minimal click",
+      "best_for": [
+        "explainer",
+        "brand",
+        "editan"
+      ]
+    },
+    {
+      "id": "glitch",
+      "name": "Glitch / Cyber",
+      "summary": "RGB split, scanline, VHS, pixel-sort, datamosh",
+      "palette": [
+        "#000000",
+        "#00F0FF",
+        "#FF2A6D",
+        "#FFFFFF"
+      ],
+      "type": "Monospace / condensed grotesk",
+      "motion": [
+        "jitter seed",
+        "freeze-frame",
+        "tearing horizontal",
+        "1 efek + 1 gerak kamera per scene"
+      ],
+      "sfx": [
+        "glitch burst",
+        "bitcrush",
+        "static",
+        "stutter",
+        "sub drop"
+      ],
+      "engine": "canvas2d",
+      "confidence": "sumber",
+      "avoid": [
+        "glitch terus-menerus tanpa jeda",
+        "lebih dari 1 efek glitch utama per scene"
+      ],
+      "sfx_query": "glitch digital",
+      "best_for": [
+        "tech",
+        "hook",
+        "musik"
+      ]
+    },
+    {
+      "id": "liquid",
+      "name": "Liquid / Morph",
+      "summary": "Gerak seperti air, objek morph jadi objek lain",
+      "palette": [
+        "#3A0CA3",
+        "#7209B7",
+        "#F72585",
+        "#FF9E00"
+      ],
+      "type": "Rounded sans",
+      "motion": [
+        "metaball",
+        "morph path",
+        "ease-in-out panjang",
+        "follow-through"
+      ],
+      "sfx": [
+        "soft swoosh",
+        "bloop",
+        "ambient pad"
+      ],
+      "engine": "canvas2d",
+      "confidence": "sumber",
+      "avoid": [
+        "sudut tajam",
+        "cut keras"
+      ],
+      "sfx_query": "liquid bubble",
+      "best_for": [
+        "brand",
+        "santai",
+        "musik"
+      ]
+    },
+    {
+      "id": "flat",
+      "name": "Flat 2D / Geometric",
+      "summary": "Shading minimal, bentuk bersih, warna sederhana",
+      "palette": [
+        "#FFB703",
+        "#FB8500",
+        "#219EBC",
+        "#023047",
+        "#8ECAE6"
+      ],
+      "type": "Geometric sans",
+      "motion": [
+        "pop-in overshoot",
+        "rotasi shape",
+        "stroke draw-on"
+      ],
+      "sfx": [
+        "pop",
+        "bubble",
+        "ui click"
+      ],
+      "engine": "canvas2d",
+      "confidence": "sumber",
+      "avoid": [
+        "gradien berat",
+        "bayangan realistis"
+      ],
+      "sfx_query": "pop cartoon",
+      "best_for": [
+        "explainer",
+        "promo",
+        "editan"
+      ]
+    },
+    {
+      "id": "isometric",
+      "name": "Isometric",
+      "summary": "2D dengan kesan 3D di sudut 30 derajat; sistem dengan banyak bagian",
+      "palette": [
+        "#E9F1F7",
+        "#4F6D7A",
+        "#C0D6DF",
+        "#DD6E42"
+      ],
+      "type": "Geometric sans",
+      "motion": [
+        "blok naik dari lantai",
+        "pan diagonal",
+        "aliran data antar node"
+      ],
+      "sfx": [
+        "mechanical click",
+        "thunk",
+        "hum"
+      ],
+      "engine": "canvas2d",
+      "confidence": "sumber",
+      "avoid": [
+        "perspektif yang tidak konsisten",
+        "sudut selain 30 derajat"
+      ],
+      "sfx_query": "mechanical",
+      "best_for": [
+        "explainer",
+        "tech"
+      ]
+    },
+    {
+      "id": "hand-drawn",
+      "name": "Hand-drawn / Analog",
+      "summary": "Garis tidak rata, jitter, tekstur kertas, grain",
+      "palette": [
+        "#F3EAD3",
+        "#1B1B1B",
+        "#2B59C3",
+        "#E4572E"
+      ],
+      "type": "Handwritten / marker",
+      "motion": [
+        "boiling line on 2s",
+        "stroke progresif"
+      ],
+      "sfx": [
+        "pencil scratch",
+        "paper rub",
+        "tap"
+      ],
+      "engine": "canvas2d",
+      "confidence": "sumber",
+      "avoid": [
+        "garis vektor sempurna",
+        "gerak terlalu mulus 60fps tanpa boil"
+      ],
+      "sfx_query": "pencil paper",
+      "best_for": [
+        "explainer",
+        "santai",
+        "editan"
+      ]
+    },
+    {
+      "id": "paper-cutout",
+      "name": "Paper Cut-out / Collage",
+      "summary": "Lapisan kertas, grain, sapuan kuas, bayangan lembut",
+      "palette": [
+        "#F2E8CF",
+        "#386641",
+        "#6A994E",
+        "#BC4749"
+      ],
+      "type": "Serif display",
+      "motion": [
+        "stop-motion 8-12fps",
+        "parallax layer",
+        "rotasi acak kecil"
+      ],
+      "sfx": [
+        "paper tear",
+        "fold",
+        "stop-motion clack"
+      ],
+      "engine": "canvas2d",
+      "confidence": "sebagian",
+      "avoid": [
+        "gerak super mulus",
+        "efek digital neon"
+      ],
+      "sfx_query": "paper",
+      "best_for": [
+        "santai",
+        "brand"
+      ]
+    },
+    {
+      "id": "synthwave",
+      "name": "Retro / Synthwave",
+      "summary": "Grain + palet terbatas; grid neon, matahari bergaris",
+      "palette": [
+        "#2B0F54",
+        "#AB1F65",
+        "#FF4F69",
+        "#FFF7F8",
+        "#FF8142"
+      ],
+      "type": "Chrome italic / retro display",
+      "motion": [
+        "grid scroll ke kamera",
+        "scanline",
+        "glow pulse per beat"
+      ],
+      "sfx": [
+        "synth arp",
+        "laser zap",
+        "tape stop"
+      ],
+      "engine": "canvas2d",
+      "confidence": "sebagian",
+      "avoid": [
+        "palet di luar neon/ungu",
+        "font modern minimalis"
+      ],
+      "sfx_query": "synth retro",
+      "best_for": [
+        "musik",
+        "gaming"
+      ]
+    },
+    {
+      "id": "glass",
+      "name": "Glass / Soft Glow",
+      "summary": "Soft glow, gradien halus, glass UI, orb iridescent",
+      "palette": [
+        "#EDE9E3",
+        "#1C1C1E",
+        "#B8C0FF",
+        "#FFD6E0"
+      ],
+      "type": "Geist / SF-like",
+      "motion": [
+        "morph lambat",
+        "spring kritis",
+        "blur-in"
+      ],
+      "sfx": [
+        "shimmer",
+        "soft chime",
+        "airy whoosh"
+      ],
+      "engine": "canvas2d",
+      "confidence": "sumber",
+      "avoid": [
+        "overshoot besar",
+        "glow di elemen UI",
+        "kontras keras"
+      ],
+      "sfx_query": "shimmer airy",
+      "best_for": [
+        "tech",
+        "brand",
+        "app"
+      ]
+    },
+    {
+      "id": "3d",
+      "name": "3D / Voxel / 3D Type",
+      "summary": "Objek 3D, kamera orbit, objek menyala per beat",
+      "palette": [
+        "#0B0C10",
+        "#66FCF1",
+        "#45A29E",
+        "#C5C6C7"
+      ],
+      "type": "Extruded bold",
+      "motion": [
+        "orbit kamera",
+        "dolly zoom",
+        "flash per beat"
+      ],
+      "sfx": [
+        "sub boom",
+        "metallic hit",
+        "doppler whoosh"
+      ],
+      "engine": "three.js",
+      "confidence": "sumber",
+      "avoid": [
+        "kamera bergetar tanpa alasan",
+        "terlalu banyak objek di frame"
+      ],
+      "sfx_query": "cinematic boom",
+      "best_for": [
+        "tech",
+        "promo"
+      ]
+    },
+    {
+      "id": "dataviz",
+      "name": "Data Viz / Infographic",
+      "summary": "Angka, chart, rail skala, label",
+      "palette": [
+        "#0F172A",
+        "#38BDF8",
+        "#F8FAFC",
+        "#F59E0B"
+      ],
+      "type": "Tabular sans",
+      "motion": [
+        "bar tumbuh ease-out",
+        "counter angka",
+        "garis chart tergambar"
+      ],
+      "sfx": [
+        "tick",
+        "data blip",
+        "ding"
+      ],
+      "engine": "canvas2d",
+      "confidence": "sumber",
+      "avoid": [
+        "angka tanpa label",
+        "chart tanpa sumber data"
+      ],
+      "sfx_query": "data blip",
+      "best_for": [
+        "data",
+        "explainer"
+      ]
+    },
+    {
+      "id": "brutalist",
+      "name": "Brutalist",
+      "summary": "Blok warna kasar, tipe raksasa, kontras ekstrem",
+      "palette": [
+        "#FFFF00",
+        "#000000",
+        "#FFFFFF",
+        "#FF0000"
+      ],
+      "type": "Grotesk black / mono",
+      "motion": [
+        "hard cut",
+        "step tanpa easing",
+        "shake keras"
+      ],
+      "sfx": [
+        "hard hit",
+        "buzzer",
+        "noise burst"
+      ],
+      "engine": "canvas2d",
+      "confidence": "umum",
+      "avoid": [
+        "easing halus",
+        "palet pastel"
+      ],
+      "sfx_query": "hard hit",
+      "best_for": [
+        "hook",
+        "promo"
+      ]
+    },
+    {
+      "id": "poster-pop",
+      "name": "Poster Pop",
+      "summary": "Poster gig yang berisik: huruf condensed raksasa, warna flat, hard cut",
+      "palette": [
+        "#FFD400",
+        "#111111",
+        "#FFFFFF",
+        "#111111"
+      ],
+      "type": "League Gothic (display) + Archivo Black",
+      "motion": [
+        "slam power4.out 0,2 s",
+        "punch 1→1,06→1 tiap beat",
+        "satu kata/angka per beat",
+        "huruf sengaja terpotong di tepi frame",
+        "land jolt: frame turun 18 px lalu settle 0,15 s"
+      ],
+      "sfx": [
+        "hard hit",
+        "kick",
+        "stomp"
+      ],
+      "engine": "canvas2d",
+      "confidence": "sumber",
+      "avoid": [
+        "warna selain kuning/hitam/putih",
+        "teks kecil",
+        "fade lembut"
+      ],
+      "sfx_query": "punchy hit",
+      "best_for": [
+        "hook",
+        "promo",
+        "list"
+      ],
+      "credit": "claude-video-2 (MIT) — github.com/ItsssssJack/claude-video-2"
+    },
+    {
+      "id": "risograph",
+      "name": "Risograph",
+      "summary": "Cetak dua tinta: berbutir, sedikit meleset register, penuh energi",
+      "palette": [
+        "#F5F0E6",
+        "#FF48B0",
+        "#0078BF",
+        "#1A1A1A"
+      ],
+      "type": "Archivo Black + Space Mono 700",
+      "motion": [
+        "stamp power4.out 0,25 s tanpa fade",
+        "layer biru meleset 3–6 px (misregistration, multiply)",
+        "grain ber-seed tetap",
+        "cut tiap beat",
+        "stamp: scale 1,12→1 + rotasi 1–2° settle"
+      ],
+      "sfx": [
+        "stamp thump",
+        "paper",
+        "snare"
+      ],
+      "engine": "canvas2d",
+      "confidence": "sumber",
+      "avoid": [
+        "opacity fade",
+        "lebih dari 2 tinta"
+      ],
+      "sfx_query": "stamp print",
+      "best_for": [
+        "promo",
+        "musik",
+        "event"
+      ],
+      "credit": "claude-video-2 (MIT) — github.com/ItsssssJack/claude-video-2"
+    },
+    {
+      "id": "blueprint",
+      "name": "Blueprint",
+      "summary": "Gambar teknik yang menggambar dirinya sendiri, garis demi garis",
+      "palette": [
+        "#0E3A66",
+        "#CFE3F7",
+        "#1C4D80",
+        "#FFD23F"
+      ],
+      "type": "IBM Plex Mono 500/700, kapital",
+      "motion": [
+        "stroke draw power1.inOut 0,6–1,2 s",
+        "garis konstruksi dulu, lalu garis asli",
+        "label datang dengan leader line",
+        "exploded view ber-stagger",
+        "hanya bagian penting diisi kuning"
+      ],
+      "sfx": [
+        "technical tick",
+        "pencil",
+        "mechanical click"
+      ],
+      "engine": "canvas2d",
+      "confidence": "sumber",
+      "avoid": [
+        "isian warna selain aksen",
+        "foto di dalam gambar"
+      ],
+      "sfx_query": "mechanical click",
+      "best_for": [
+        "explainer",
+        "produk",
+        "tech"
+      ],
+      "credit": "claude-video-2 (MIT) — github.com/ItsssssJack/claude-video-2"
+    },
+    {
+      "id": "midnight-grid",
+      "name": "Midnight Grid",
+      "summary": "Navy pekat, dot grid tenang, satu biru yang bicara",
+      "palette": [
+        "#0B1220",
+        "#E8EDF7",
+        "#8C98B3",
+        "#3D8BFF"
+      ],
+      "type": "Inter 700 + JetBrains Mono",
+      "motion": [
+        "land power3.out 0,5 s",
+        "diagram dibangun node demi node",
+        "garis tersambung power2.inOut 0,6 s",
+        "node aktif biru, lama kembali redup",
+        "kamera pan tenang, stagger 0,05 s"
+      ],
+      "sfx": [
+        "soft blip",
+        "data tick",
+        "airy whoosh"
+      ],
+      "engine": "canvas2d",
+      "confidence": "sumber",
+      "avoid": [
+        "whip pan",
+        "lebih dari 1 warna aksen"
+      ],
+      "sfx_query": "digital blip",
+      "best_for": [
+        "tech",
+        "explainer",
+        "app"
+      ],
+      "credit": "claude-video-2 (MIT) — github.com/ItsssssJack/claude-video-2"
+    },
+    {
+      "id": "editorial-paper",
+      "name": "Editorial Paper",
+      "summary": "Grafis koran yang hidup: kertas hangat, tinta hitam, satu biru",
+      "palette": [
+        "#FFF1E5",
+        "#1A1A1A",
+        "#6B5E55",
+        "#0F5499"
+      ],
+      "type": "Playfair Display 700/900 + Inter 500",
+      "motion": [
+        "land power3.out 0,7 s",
+        "garis tergambar kiri→kanan 1,2–2 s",
+        "angka menghitung sinkron dengan garis",
+        "kamera zoom chart (ubah sumbu), tidak shake",
+        "satu bar biru tumbuh melewati yang lain"
+      ],
+      "sfx": [
+        "paper",
+        "pen",
+        "soft tick"
+      ],
+      "engine": "canvas2d",
+      "confidence": "sumber",
+      "avoid": [
+        "shake kamera",
+        "lebih dari 1 aksen"
+      ],
+      "sfx_query": "paper pen",
+      "best_for": [
+        "data",
+        "explainer"
+      ],
+      "credit": "claude-video-2 (MIT) — github.com/ItsssssJack/claude-video-2"
+    },
+    {
+      "id": "graphite-ui",
+      "name": "Graphite UI",
+      "summary": "Film produk yang tenang: graphite gelap, UI tajam, kamera presisi",
+      "palette": [
+        "#0E0F12",
+        "#ECEDEF",
+        "#8A8F98",
+        "#3DD68C"
+      ],
+      "type": "Inter 500/600",
+      "motion": [
+        "land expo.out 0,6 s",
+        "kamera power3.inOut 1,2 s",
+        "teks muncul dari balik mask, bukan fade",
+        "hold tiap ide ≥ 1,2 s",
+        "cascade list 0,04 s"
+      ],
+      "sfx": [
+        "ui click",
+        "soft whoosh",
+        "success chime"
+      ],
+      "engine": "canvas2d",
+      "confidence": "sumber",
+      "avoid": [
+        "bounce/elastic",
+        "soft fade",
+        "gerak handheld"
+      ],
+      "sfx_query": "ui click",
+      "best_for": [
+        "app",
+        "tech",
+        "produk"
+      ],
+      "credit": "claude-video-2 (MIT) — github.com/ItsssssJack/claude-video-2"
+    },
+    {
+      "id": "ink-line",
+      "name": "One Ink Line",
+      "summary": "Satu garis kuas sumi yang tak pernah terangkat, berubah jadi bentuk berikutnya",
+      "palette": [
+        "#F4EFE6",
+        "#1C1C1C",
+        "#7A7068",
+        "#D23C2A"
+      ],
+      "type": "tanpa teks; stempel Noto Serif JP 600",
+      "motion": [
+        "satu garis tak putus",
+        "draw on 2s (15 fps), boil 1–2 px",
+        "draw-on sine.inOut 1,5 s",
+        "stempel merah sekali di akhir, power2.in 0,2 s"
+      ],
+      "sfx": [
+        "brush stroke",
+        "paper",
+        "water drop",
+        "gong"
+      ],
+      "engine": "canvas2d",
+      "confidence": "sumber",
+      "avoid": [
+        "banyak teks",
+        "garis putus",
+        "lebih dari 1 aksen"
+      ],
+      "sfx_query": "brush paper",
+      "best_for": [
+        "brand",
+        "santai",
+        "logo"
+      ],
+      "credit": "claude-video-2 (MIT) — github.com/ItsssssJack/claude-video-2"
+    },
+    {
+      "id": "particle-field",
+      "name": "Particle Field",
+      "summary": "Asap cahaya yang memadat jadi bentuk tenang di malam pekat",
+      "palette": [
+        "#0A0F1C",
+        "#F3EEE4",
+        "#111A2C",
+        "#6FD3E8"
+      ],
+      "type": "tanpa teks; opsional Inter 300",
+      "motion": [
+        "titik mengalir, tidak pernah pop",
+        "swirl lewat noise field 70–150 px",
+        "land power2.inOut 0,9 s",
+        "settle wobble teredam 3–4%",
+        "5% titik berwarna aksen, konsisten"
+      ],
+      "sfx": [
+        "airy whoosh",
+        "shimmer",
+        "sub swell"
+      ],
+      "engine": "canvas2d",
+      "confidence": "sumber",
+      "avoid": [
+        "titik muncul/hilang tiba-tiba",
+        "gerak lurus",
+        "glow blur per titik"
+      ],
+      "sfx_query": "ambient swell",
+      "best_for": [
+        "tech",
+        "musik",
+        "logo"
+      ],
+      "credit": "claude-video-2 (MIT) — github.com/ItsssssJack/claude-video-2"
+    }
+  ],
+  "tags": {
+    "promo": "Promo",
+    "hook": "Hook / Shorts",
+    "explainer": "Explainer",
+    "data": "Data & angka",
+    "tech": "Tech / AI",
+    "app": "Demo app",
+    "brand": "Brand / logo",
+    "santai": "Santai",
+    "musik": "Musik",
+    "editan": "Untuk editan",
+    "caption": "Caption",
+    "produk": "Produk",
+    "list": "List / top N",
+    "event": "Event",
+    "showreel": "Showreel",
+    "logo": "Logo",
+    "gaming": "Gaming"
+  }
+};
+
+</script>
+  <script>
+// AUTO-GENERATED by scripts/build-styles.mjs from data/elements.json. Do not edit by hand.
+window.ELEMENT_DATA = {
+  "version": 1,
+  "doc": "sources/05-motion-untuk-editan-video.md",
+  "elements": [
+    {
+      "id": "caption-kata",
+      "name": "Caption kata-per-kata",
+      "group": "Teks & caption",
+      "desc": "Subtitle yang menyorot kata yang sedang diucapkan",
+      "styles": [
+        "kinetic-type",
+        "poster-pop",
+        "brutalist"
+      ],
+      "sfx": "tanpa / tick halus",
+      "export": "overlay"
+    },
+    {
+      "id": "keyword-highlight",
+      "name": "Highlight kata kunci",
+      "group": "Teks & caption",
+      "desc": "Kata kunci diberi kotak/warna/ukuran besar",
+      "styles": [
+        "kinetic-type",
+        "flat"
+      ],
+      "sfx": "pop",
+      "export": "overlay"
+    },
+    {
+      "id": "emoji-pop",
+      "name": "Emoji pop",
+      "group": "Teks & caption",
+      "desc": "Emoji muncul memantul di momen emosional",
+      "styles": [
+        "flat",
+        "opus-showreel"
+      ],
+      "sfx": "pop",
+      "export": "overlay"
+    },
+    {
+      "id": "hook-title",
+      "name": "Teks hook / judul",
+      "group": "Teks & caption",
+      "desc": "Teks besar di 0–3 detik pertama",
+      "styles": [
+        "poster-pop",
+        "kinetic-type",
+        "glitch"
+      ],
+      "sfx": "whoosh + hit",
+      "export": "overlay"
+    },
+    {
+      "id": "text-behind",
+      "name": "Teks di belakang subjek",
+      "group": "Teks & caption",
+      "desc": "Teks di belakang orang/objek (butuh mask subjek)",
+      "styles": [
+        "swiss",
+        "kinetic-type"
+      ],
+      "sfx": "whoosh",
+      "export": "overlay"
+    },
+    {
+      "id": "quote-card",
+      "name": "Kartu kutipan",
+      "group": "Teks & caption",
+      "desc": "Kutipan di kartu untuk podcast/motivasi",
+      "styles": [
+        "glass",
+        "paper-cutout",
+        "editorial-paper"
+      ],
+      "sfx": "shimmer",
+      "export": "overlay"
+    },
+    {
+      "id": "lower-third",
+      "name": "Lower third",
+      "group": "Overlay info",
+      "desc": "Nama/jabatan/lokasi di bagian bawah layar",
+      "styles": [
+        "swiss",
+        "glass",
+        "graphite-ui"
+      ],
+      "sfx": "swoosh pelan",
+      "export": "overlay"
+    },
+    {
+      "id": "callout",
+      "name": "Callout / panah",
+      "group": "Overlay info",
+      "desc": "Panah + label menunjuk bagian gambar",
+      "styles": [
+        "flat",
+        "hand-drawn",
+        "blueprint"
+      ],
+      "sfx": "ui click",
+      "export": "overlay"
+    },
+    {
+      "id": "circle-scribble",
+      "name": "Coretan lingkaran",
+      "group": "Overlay info",
+      "desc": "Lingkari atau garis bawahi sesuatu di footage",
+      "styles": [
+        "hand-drawn",
+        "ink-line"
+      ],
+      "sfx": "pencil scratch",
+      "export": "overlay"
+    },
+    {
+      "id": "infographic",
+      "name": "Infografis (chart)",
+      "group": "Overlay info",
+      "desc": "Bar/lingkaran chart, papan skor",
+      "styles": [
+        "editorial-paper",
+        "dataviz",
+        "midnight-grid"
+      ],
+      "sfx": "data blip",
+      "export": "overlay"
+    },
+    {
+      "id": "counter",
+      "name": "Counter angka",
+      "group": "Overlay info",
+      "desc": "Angka berjalan 0 → target",
+      "styles": [
+        "editorial-paper",
+        "dataviz",
+        "poster-pop"
+      ],
+      "sfx": "tick + ding",
+      "export": "overlay"
+    },
+    {
+      "id": "progress-bar",
+      "name": "Progress bar / bab",
+      "group": "Overlay info",
+      "desc": "Posisi di video, penanda pindah bab",
+      "styles": [
+        "swiss",
+        "flat",
+        "graphite-ui"
+      ],
+      "sfx": "click",
+      "export": "overlay"
+    },
+    {
+      "id": "map-route",
+      "name": "Peta / rute",
+      "group": "Overlay info",
+      "desc": "Garis rute A → B, zoom ke lokasi",
+      "styles": [
+        "flat",
+        "isometric",
+        "blueprint"
+      ],
+      "sfx": "whoosh panjang",
+      "export": "full"
+    },
+    {
+      "id": "timeline",
+      "name": "Timeline",
+      "group": "Overlay info",
+      "desc": "Titik waktu bermunculan",
+      "styles": [
+        "swiss",
+        "editorial-paper",
+        "paper-cutout"
+      ],
+      "sfx": "tick",
+      "export": "overlay"
+    },
+    {
+      "id": "listicle-number",
+      "name": "Nomor listicle",
+      "group": "Overlay info",
+      "desc": "#5 … #1 untuk video top-N",
+      "styles": [
+        "poster-pop",
+        "brutalist",
+        "kinetic-type"
+      ],
+      "sfx": "hit",
+      "export": "overlay"
+    },
+    {
+      "id": "zoom-punch",
+      "name": "Zoom punch-in",
+      "group": "Transisi & ritme",
+      "desc": "Zoom cepat di momen penting (dipakai konsisten)",
+      "styles": [
+        "opus-showreel",
+        "poster-pop"
+      ],
+      "sfx": "hit / bass",
+      "export": "full"
+    },
+    {
+      "id": "whip-transition",
+      "name": "Whip / whoosh transition",
+      "group": "Transisi & ritme",
+      "desc": "Pindah scene dengan blur gerak",
+      "styles": [
+        "opus-showreel",
+        "kinetic-type"
+      ],
+      "sfx": "whoosh",
+      "export": "overlay"
+    },
+    {
+      "id": "shape-wipe",
+      "name": "Shape / mask wipe",
+      "group": "Transisi & ritme",
+      "desc": "Bentuk menutup layar lalu membuka scene baru",
+      "styles": [
+        "flat",
+        "risograph",
+        "swiss"
+      ],
+      "sfx": "swoosh",
+      "export": "overlay"
+    },
+    {
+      "id": "glitch-transition",
+      "name": "Transisi glitch",
+      "group": "Transisi & ritme",
+      "desc": "Cut digital sesaat",
+      "styles": [
+        "glitch"
+      ],
+      "sfx": "glitch burst",
+      "export": "overlay"
+    },
+    {
+      "id": "ui-walkthrough",
+      "name": "Walkthrough UI aplikasi",
+      "group": "Produk & brand",
+      "desc": "Rekaman layar + kursor + callout zoom + label fitur",
+      "styles": [
+        "graphite-ui",
+        "glass",
+        "midnight-grid"
+      ],
+      "sfx": "ui click",
+      "export": "full"
+    },
+    {
+      "id": "floating-cards",
+      "name": "Kartu UI melayang",
+      "group": "Produk & brand",
+      "desc": "Dashboard/kartu melayang untuk hero",
+      "styles": [
+        "glass",
+        "graphite-ui",
+        "3d"
+      ],
+      "sfx": "airy whoosh",
+      "export": "full"
+    },
+    {
+      "id": "product-3d",
+      "name": "Reveal produk 3D",
+      "group": "Produk & brand",
+      "desc": "Produk berputar dari semua sudut",
+      "styles": [
+        "3d",
+        "particle-field"
+      ],
+      "sfx": "sub boom",
+      "export": "full"
+    },
+    {
+      "id": "logo-reveal",
+      "name": "Logo reveal / end card",
+      "group": "Produk & brand",
+      "desc": "Penutup dengan logo + CTA",
+      "styles": [
+        "ink-line",
+        "particle-field",
+        "opus-showreel"
+      ],
+      "sfx": "riser + impact",
+      "export": "full"
+    },
+    {
+      "id": "price-tag",
+      "name": "Harga / diskon",
+      "group": "Produk & brand",
+      "desc": "Harga muncul, harga lama dicoret",
+      "styles": [
+        "poster-pop",
+        "flat",
+        "brutalist"
+      ],
+      "sfx": "cash ding",
+      "export": "overlay"
+    },
+    {
+      "id": "before-after",
+      "name": "Before / after slider",
+      "group": "Produk & brand",
+      "desc": "Perbandingan dengan garis geser",
+      "styles": [
+        "swiss",
+        "flat"
+      ],
+      "sfx": "swoosh",
+      "export": "full"
+    },
+    {
+      "id": "testimonial",
+      "name": "Kartu testimoni",
+      "group": "Produk & brand",
+      "desc": "Ulasan + bintang",
+      "styles": [
+        "glass",
+        "editorial-paper"
+      ],
+      "sfx": "shimmer",
+      "export": "overlay"
+    },
+    {
+      "id": "checklist",
+      "name": "Checklist fitur",
+      "group": "Produk & brand",
+      "desc": "Centang muncul satu per satu",
+      "styles": [
+        "graphite-ui",
+        "flat",
+        "swiss"
+      ],
+      "sfx": "click",
+      "export": "overlay"
+    }
+  ]
+};
+
+</script>
+  <script>
+// Mini animated previews per style. Every preview is a pure function of time:
+// draw(ctx, t, W, H, palette, text). Loops every LOOP seconds.
+(function () {
+  const LOOP = 4;
+  const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+  const easeOut = (x) => 1 - Math.pow(1 - clamp(x), 3);
+  const easeInOut = (x) => { x = clamp(x); return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+  const spring = (t, k = 170, d = 14) => {
+    if (t <= 0) return 0;
+    const w0 = Math.sqrt(k), z = d / (2 * Math.sqrt(k));
+    if (z < 1) { const wd = w0 * Math.sqrt(1 - z * z); return 1 - Math.exp(-z * w0 * t) * (Math.cos(wd * t) + (z * w0 / wd) * Math.sin(wd * t)); }
+    return 1 - Math.exp(-w0 * t) * (1 + w0 * t);
+  };
+  const rnd = (s) => { const x = Math.sin(s * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+  const bg = (ctx, W, H, c) => { ctx.fillStyle = c; ctx.fillRect(0, 0, W, H); };
+  const txt = (ctx, s, x, y, size, color, font = "system-ui, sans-serif", weight = 800, align = "center") => {
+    ctx.font = `${weight} ${size}px ${font}`;
+    const maxW = (ctx.canvas.width / (ctx.getTransform().a || 1)) * 0.88, w = ctx.measureText(s).width;
+    if (w > maxW) { size = size * maxW / w; ctx.font = `${weight} ${size}px ${font}`; }
+    ctx.fillStyle = color; ctx.textAlign = align; ctx.textBaseline = "middle"; ctx.fillText(s, x, y);
+  };
+  const short = (s, n = 22) => (s || "MOTION").toUpperCase().slice(0, n);
+
+  const P = {};
+
+  P["opus-showreel"] = (ctx, t, W, H, c, text) => {
+    bg(ctx, W, H, c[0]);
+    const u = t % LOOP;
+    // particles
+    for (let i = 0; i < 40; i++) {
+      const a = rnd(i) * Math.PI * 2, r = (u * 60 + rnd(i + 9) * W) % W;
+      ctx.fillStyle = i % 5 ? c[2] : c[3];
+      ctx.globalAlpha = 0.6; ctx.fillRect(W / 2 + Math.cos(a) * r, H / 2 + Math.sin(a) * r * 0.6, 2, 2);
+    }
+    ctx.globalAlpha = 1;
+    // mask wipe block
+    const w = easeInOut(u / 0.8) * W - easeInOut((u - 2.8) / 0.8) * W;
+    ctx.fillStyle = c[3]; ctx.fillRect(0, H * 0.62, Math.max(0, w), 6);
+    const s = spring(u - 0.3);
+    ctx.save(); ctx.translate(W / 2, H / 2); ctx.scale(s, s);
+    txt(ctx, short(text), 0, 0, W * 0.11, c[1]); ctx.restore();
+    const ring = easeOut((u - 0.2) / 1.2);
+    ctx.strokeStyle = c[3]; ctx.lineWidth = 2; ctx.globalAlpha = 1 - ring;
+    ctx.beginPath(); ctx.arc(W / 2, H / 2, ring * W * 0.45, 0, Math.PI * 2); ctx.stroke(); ctx.globalAlpha = 1;
+  };
+
+  P["kinetic-type"] = (ctx, t, W, H, c, text) => {
+    bg(ctx, W, H, c[0]);
+    const u = t % LOOP, s = short(text);
+    let size = W * 0.12; ctx.font = `900 ${size}px system-ui`;
+    if (ctx.measureText(s).width > W * 0.88) { size *= (W * 0.88) / ctx.measureText(s).width; ctx.font = `900 ${size}px system-ui`; }
+    const total = ctx.measureText(s).width;
+    let x = W / 2 - total / 2;
+    for (let i = 0; i < s.length; i++) {
+      const ch = s[i], cw = ctx.measureText(ch).width;
+      const k = spring(u - i * 0.05, 220, 12);
+      const out = easeInOut((u - 3.2 - i * 0.02) / 0.4);
+      txt(ctx, ch, x + cw / 2, H / 2 + (1 - k) * H * 0.4 - out * H * 0.6, size, i === 0 ? c[2] : c[1], "system-ui", 900);
+      x += cw;
+    }
+    ctx.fillStyle = c[2]; ctx.fillRect(W / 2 - total / 2, H / 2 + size * 0.6, total * easeOut((u - 0.6) / 0.6), 4);
+  };
+
+  P["swiss"] = (ctx, t, W, H, c, text) => {
+    bg(ctx, W, H, c[0]);
+    const u = t % LOOP, cols = 6;
+    ctx.strokeStyle = "rgba(0,0,0,.08)"; ctx.lineWidth = 1;
+    for (let i = 1; i < cols; i++) { ctx.beginPath(); ctx.moveTo((W / cols) * i, 0); ctx.lineTo((W / cols) * i, H); ctx.stroke(); }
+    const step = Math.floor(u * 2) / 2; // immediate state changes
+    ctx.fillStyle = c[2]; ctx.fillRect(0, 0, (W / cols) * Math.min(cols, 1 + step * 1.5), H * 0.28);
+    const w = easeInOut((u - 0.5) / 0.6);
+    ctx.save(); ctx.beginPath(); ctx.rect(W / cols, H * 0.4, W * w, H * 0.4); ctx.clip();
+    txt(ctx, short(text), W / cols, H * 0.52, W * 0.07, c[1], "Helvetica, Arial, sans-serif", 800, "left");
+    txt(ctx, "INTERNATIONAL / 01", W / cols, H * 0.68, W * 0.03, c[1], "Helvetica, Arial, sans-serif", 500, "left");
+    ctx.restore();
+  };
+
+  P["glitch"] = (ctx, t, W, H, c, text) => {
+    bg(ctx, W, H, c[0]);
+    const u = t % LOOP, f = Math.floor(t * 12), burst = rnd(f) > 0.7;
+    const off = burst ? (rnd(f + 1) - 0.5) * 16 : 2;
+    const s = short(text), size = W * 0.11;
+    ctx.globalCompositeOperation = "lighter";
+    txt(ctx, s, W / 2 - off, H / 2, size, c[1], "ui-monospace, monospace");
+    txt(ctx, s, W / 2 + off, H / 2, size, c[2], "ui-monospace, monospace");
+    ctx.globalCompositeOperation = "source-over";
+    txt(ctx, s, W / 2, H / 2, size, burst ? c[3] : "rgba(255,255,255,.85)", "ui-monospace, monospace");
+    if (burst) for (let i = 0; i < 4; i++) {
+      const y = rnd(f + i * 3) * H, h = 4 + rnd(f + i) * 14, dx = (rnd(f + i * 7) - 0.5) * 40;
+      ctx.drawImage(ctx.canvas, 0, y * (ctx.canvas.height / H), ctx.canvas.width, h * (ctx.canvas.height / H), dx, y, W, h);
+    }
+    ctx.fillStyle = "rgba(255,255,255,.05)";
+    for (let y = (u * 40) % 4; y < H; y += 4) ctx.fillRect(0, y, W, 1);
+  };
+
+  P["liquid"] = (ctx, t, W, H, c, text) => {
+    const g = ctx.createLinearGradient(0, 0, W, H); g.addColorStop(0, c[0]); g.addColorStop(1, c[1]);
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = c[2];
+    ctx.beginPath();
+    const N = 64, R = Math.min(W, H) * 0.28;
+    for (let i = 0; i <= N; i++) {
+      const a = (i / N) * Math.PI * 2;
+      const r = R * (1 + 0.12 * Math.sin(a * 3 + t * 2) + 0.08 * Math.sin(a * 5 - t * 3));
+      const x = W / 2 + Math.cos(a) * r, y = H / 2 + Math.sin(a) * r;
+      i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+    }
+    ctx.fill();
+    ctx.fillStyle = c[3];
+    const bx = W / 2 + Math.cos(t * 1.3) * R * 1.2, by = H / 2 + Math.sin(t * 1.7) * R * 0.7;
+    ctx.beginPath(); ctx.arc(bx, by, R * 0.3, 0, Math.PI * 2); ctx.fill();
+    txt(ctx, short(text), W / 2, H / 2, W * 0.08, "#fff", "ui-rounded, system-ui", 800);
+  };
+
+  P["flat"] = (ctx, t, W, H, c, text) => {
+    bg(ctx, W, H, c[4] || "#8ECAE6");
+    const u = t % LOOP;
+    const shapes = [[0.25, 0.4, 0], [0.5, 0.35, 1], [0.75, 0.42, 2]];
+    shapes.forEach(([x, y, i], k) => {
+      const s = spring(u - k * 0.15, 200, 10) * (1 - easeInOut((u - 3.3) / 0.4));
+      ctx.save(); ctx.translate(W * x, H * y); ctx.rotate(u * (k - 1)); ctx.scale(s, s); ctx.fillStyle = c[i];
+      const r = W * 0.08;
+      if (k === 0) { ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill(); }
+      else if (k === 1) ctx.fillRect(-r, -r, r * 2, r * 2);
+      else { ctx.beginPath(); ctx.moveTo(0, -r); ctx.lineTo(r, r); ctx.lineTo(-r, r); ctx.fill(); }
+      ctx.restore();
+    });
+    txt(ctx, short(text), W / 2, H * 0.78, W * 0.07, c[3]);
+  };
+
+  P["isometric"] = (ctx, t, W, H, c, text) => {
+    bg(ctx, W, H, c[0]);
+    const u = t % LOOP, s = W * 0.06, cx = W / 2, cy = H * 0.55;
+    const iso = (x, y, z) => [cx + (x - y) * s * 0.866, cy + (x + y) * s * 0.5 - z * s];
+    const cube = (x, y, h, col) => {
+      const p = (a, b, z) => iso(a, b, z);
+      const poly = (pts, f) => { ctx.fillStyle = f; ctx.beginPath(); pts.forEach((q, i) => (i ? ctx.lineTo(...q) : ctx.moveTo(...q))); ctx.fill(); };
+      poly([p(x, y, h), p(x + 1, y, h), p(x + 1, y + 1, h), p(x, y + 1, h)], c[2]);
+      poly([p(x, y + 1, h), p(x + 1, y + 1, h), p(x + 1, y + 1, 0), p(x, y + 1, 0)], col);
+      poly([p(x + 1, y, h), p(x + 1, y + 1, h), p(x + 1, y + 1, 0), p(x + 1, y, 0)], c[1]);
+    };
+    const blocks = [[-1, -1, 1], [0, -1, 2], [1, -1, 1.4], [-1, 0, 1.8], [0, 0, 2.6], [1, 0, 1], [-1, 1, 1.2], [0, 1, 1.6], [1, 1, 2.2]];
+    blocks.forEach(([x, y, h], i) => cube(x, y, Math.max(0.05, h * spring(u - i * 0.08, 180, 12)), i === 4 ? c[3] : "#9FB4BF"));
+    txt(ctx, short(text), W / 2, H * 0.12, W * 0.05, c[1]);
+  };
+
+  P["hand-drawn"] = (ctx, t, W, H, c, text) => {
+    bg(ctx, W, H, c[0]);
+    const u = t % LOOP, boil = Math.floor(t * 12); // on 2s at 24fps
+    ctx.strokeStyle = c[1]; ctx.lineWidth = 2.5; ctx.lineCap = "round";
+    const prog = easeInOut(u / 1.6), N = 80;
+    ctx.beginPath();
+    for (let i = 0; i <= N * prog; i++) {
+      const a = (i / N) * Math.PI * 2, r = Math.min(W, H) * 0.3 + (rnd(i + boil * 13) - 0.5) * 4;
+      const x = W / 2 + Math.cos(a) * r * 1.3, y = H / 2 + Math.sin(a) * r;
+      i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+    }
+    ctx.stroke();
+    ctx.save(); ctx.translate((rnd(boil) - 0.5) * 2, (rnd(boil + 1) - 0.5) * 2);
+    txt(ctx, (text || "sketch").slice(0, 14), W / 2, H / 2, W * 0.08, c[2], "'Comic Sans MS', 'Marker Felt', cursive", 700);
+    ctx.restore();
+    for (let i = 0; i < 300; i++) { ctx.fillStyle = `rgba(0,0,0,${rnd(i + boil) * 0.06})`; ctx.fillRect(rnd(i * 3 + boil) * W, rnd(i * 7 + boil) * H, 1.5, 1.5); }
+  };
+
+  P["paper-cutout"] = (ctx, t, W, H, c, text) => {
+    bg(ctx, W, H, c[0]);
+    const st = Math.floor(t * 10) / 10, u = st % LOOP; // stop-motion 10fps
+    const layers = [[c[1], 0.75, 0.4], [c[2], 0.82, 0.7], [c[3], 0.9, 1]];
+    layers.forEach(([col, y, sp], i) => {
+      ctx.save(); ctx.shadowColor = "rgba(0,0,0,.25)"; ctx.shadowBlur = 8; ctx.shadowOffsetY = 3;
+      ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(-10, H);
+      for (let x = -10; x <= W + 10; x += W / 8) ctx.lineTo(x, H * y + Math.sin(x * 0.02 + u * sp * 2 + i) * 12 + (rnd(x + i) - 0.5) * 6);
+      ctx.lineTo(W + 10, H); ctx.fill(); ctx.restore();
+    });
+    ctx.save(); ctx.translate(W / 2, H * 0.35); ctx.rotate((rnd(Math.floor(t * 10)) - 0.5) * 0.05);
+    ctx.fillStyle = "#fff"; ctx.shadowColor = "rgba(0,0,0,.2)"; ctx.shadowBlur = 6; ctx.fillRect(-W * 0.3, -H * 0.1, W * 0.6, H * 0.2);
+    ctx.shadowBlur = 0; txt(ctx, (text || "Paper").slice(0, 14), 0, 0, W * 0.06, c[3], "Georgia, serif", 700); ctx.restore();
+  };
+
+  P["synthwave"] = (ctx, t, W, H, c, text) => {
+    const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, c[0]); g.addColorStop(0.6, c[1]); g.addColorStop(1, c[0]);
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    const hz = H * 0.6, sr = W * 0.18;
+    const sg = ctx.createLinearGradient(0, hz - sr * 2, 0, hz); sg.addColorStop(0, c[4] || "#FF8142"); sg.addColorStop(1, c[2]);
+    ctx.fillStyle = sg; ctx.beginPath(); ctx.arc(W / 2, hz, sr, Math.PI, 0); ctx.fill();
+    ctx.fillStyle = c[0]; for (let i = 0; i < 5; i++) ctx.fillRect(W / 2 - sr, hz - i * sr * 0.18 - 4, sr * 2, 2 + i);
+    ctx.strokeStyle = c[2]; ctx.lineWidth = 1.5; ctx.shadowColor = c[2]; ctx.shadowBlur = 8;
+    for (let i = -10; i <= 10; i++) { ctx.beginPath(); ctx.moveTo(W / 2 + i * 8, hz); ctx.lineTo(W / 2 + i * W * 0.15, H); ctx.stroke(); }
+    for (let k = 0; k < 8; k++) { const z = ((k + (t * 1.5) % 1) / 8); const y = hz + Math.pow(z, 2) * (H - hz); ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+    ctx.shadowBlur = 14 + Math.sin(t * Math.PI * 4) * 6; ctx.shadowColor = c[3];
+    txt(ctx, short(text), W / 2, H * 0.25, W * 0.08, c[3], "system-ui", 900); ctx.shadowBlur = 0;
+  };
+
+  P["glass"] = (ctx, t, W, H, c, text) => {
+    bg(ctx, W, H, c[0]);
+    const r = Math.min(W, H) * 0.32;
+    const x = W / 2 + Math.cos(t * 0.8) * 10, y = H / 2 + Math.sin(t * 0.6) * 8;
+    const g = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, r * 0.1, x, y, r);
+    g.addColorStop(0, "#ffffff"); g.addColorStop(0.45, c[3]); g.addColorStop(1, c[2]);
+    ctx.save(); ctx.filter = "blur(2px)"; ctx.fillStyle = g; ctx.beginPath();
+    const N = 48; for (let i = 0; i <= N; i++) { const a = (i / N) * Math.PI * 2; const rr = r * (1 + 0.05 * Math.sin(a * 3 + t * 1.5)); const px = x + Math.cos(a) * rr, py = y + Math.sin(a) * rr; i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }
+    ctx.fill(); ctx.restore();
+    ctx.fillStyle = "rgba(255,255,255,.55)"; ctx.strokeStyle = "rgba(255,255,255,.9)";
+    const pw = W * 0.5, ph = H * 0.16; ctx.beginPath(); ctx.roundRect(W / 2 - pw / 2, H * 0.72, pw, ph, 14); ctx.fill(); ctx.stroke();
+    txt(ctx, (text || "Soft glow").slice(0, 18), W / 2, H * 0.72 + ph / 2, W * 0.04, c[1], "system-ui", 600);
+  };
+
+  P["3d"] = (ctx, t, W, H, c, text) => {
+    bg(ctx, W, H, c[0]);
+    const pts = [], a = t * 0.8, b = t * 0.5, s = Math.min(W, H) * 0.25;
+    for (const x of [-1, 1]) for (const y of [-1, 1]) for (const z of [-1, 1]) pts.push([x, y, z]);
+    const proj = ([x, y, z]) => {
+      let X = x * Math.cos(a) - z * Math.sin(a), Z = x * Math.sin(a) + z * Math.cos(a);
+      let Y = y * Math.cos(b) - Z * Math.sin(b); Z = y * Math.sin(b) + Z * Math.cos(b);
+      const p = 3 / (3 + Z); return [W / 2 + X * s * p, H / 2 + Y * s * p];
+    };
+    const P2 = pts.map(proj), beat = Math.pow(1 - ((t * 2) % 1), 3);
+    ctx.strokeStyle = c[1]; ctx.lineWidth = 2 + beat * 3; ctx.shadowColor = c[1]; ctx.shadowBlur = 10 * beat;
+    for (let i = 0; i < 8; i++) for (let j = i + 1; j < 8; j++) {
+      const d = pts[i].reduce((acc, v, k) => acc + Math.abs(v - pts[j][k]), 0);
+      if (d === 2) { ctx.beginPath(); ctx.moveTo(...P2[i]); ctx.lineTo(...P2[j]); ctx.stroke(); }
+    }
+    ctx.shadowBlur = 0; txt(ctx, short(text), W / 2, H * 0.88, W * 0.05, c[3]);
+  };
+
+  P["dataviz"] = (ctx, t, W, H, c, text) => {
+    bg(ctx, W, H, c[0]);
+    const u = t % LOOP, vals = [0.35, 0.6, 0.45, 0.85, 0.7], bw = W * 0.1, base = H * 0.8;
+    vals.forEach((v, i) => {
+      const h = v * H * 0.55 * easeOut((u - i * 0.12) / 0.8);
+      ctx.fillStyle = i === 3 ? c[3] : c[1]; ctx.fillRect(W * 0.15 + i * bw * 1.4, base - h, bw, h);
+    });
+    ctx.fillStyle = c[2]; ctx.fillRect(W * 0.12, base, W * 0.76, 2);
+    const n = Math.round(85 * easeOut((u - 0.4) / 1.2));
+    txt(ctx, n + "%", W * 0.82, H * 0.2, W * 0.08, c[2], "ui-monospace, monospace", 700, "right");
+    txt(ctx, (text || "Growth").slice(0, 16), W * 0.15, H * 0.2, W * 0.04, c[2], "system-ui", 600, "left");
+  };
+
+  P["brutalist"] = (ctx, t, W, H, c, text) => {
+    const f = Math.floor(t * 4) % 4; // hard cuts
+    bg(ctx, W, H, c[f % 2 ? 1 : 0]);
+    const fg = f % 2 ? c[0] : c[1];
+    ctx.fillStyle = c[3]; ctx.fillRect(f * W * 0.1, H * 0.68, W * 0.5, H * 0.14);
+    const shake = rnd(Math.floor(t * 24)) * 6 - 3;
+    ctx.strokeStyle = fg; ctx.lineWidth = 6; ctx.strokeRect(10, 10, W - 20, H - 20);
+    txt(ctx, short(text), W / 2 + shake, H * 0.42, W * 0.16, fg, "Impact, 'Arial Black', sans-serif", 900);
+  };
+
+
+  // ---- styles adapted from claude-video-2 (MIT) ----
+  P["poster-pop"] = (ctx, t, W, H, c, text) => {
+    const words = short(text).split(/\s+/).filter(Boolean); const beat = Math.floor(t * 2); const flip = beat % 4 === 3;
+    bg(ctx, W, H, flip ? c[1] : c[0]);
+    const w = words[beat % words.length] || "POP", k = clamp((t * 2 % 1) / 0.4), slam = easeOut(k * 2);
+    const jolt = Math.max(0, 1 - k * 4) * 6;
+    ctx.save(); ctx.translate(0, jolt);
+    ctx.font = `900 ${H * 0.8}px 'League Gothic', Impact, 'Arial Narrow', sans-serif`;
+    ctx.fillStyle = flip ? c[0] : c[1]; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    const sc = Math.min(1, (W * 1.15) / Math.max(1, ctx.measureText(w).width));
+    ctx.translate(W / 2 + (1 - slam) * W, H / 2); ctx.scale(sc, 1); ctx.fillText(w, 0, H * 0.04); ctx.restore();
+  };
+
+  P["risograph"] = (ctx, t, W, H, c, text) => {
+    bg(ctx, W, H, c[0]);
+    const beat = Math.floor(t * 2), k = (t * 2) % 1, stamp = 1 + 0.12 * Math.max(0, 1 - k * 4), off = 3 + 4 * Math.max(0, 1 - k * 3);
+    ctx.globalCompositeOperation = "multiply";
+    ctx.fillStyle = c[2]; for (let i = 0; i < 6; i++) ctx.fillRect(((i * 0.18 + (beat % 2) * 0.09) % 1.1) * W, 0, W * 0.05, H);
+    ctx.save(); ctx.translate(W / 2, H / 2); ctx.scale(stamp, stamp); ctx.rotate((rnd(beat) - 0.5) * 0.04);
+    txt(ctx, short(text), off, off, W * 0.12, c[2], "'Archivo Black', 'Arial Black', sans-serif", 900);
+    txt(ctx, short(text), 0, 0, W * 0.12, c[1], "'Archivo Black', 'Arial Black', sans-serif", 900);
+    ctx.restore(); ctx.globalCompositeOperation = "source-over";
+    for (let i = 0; i < 500; i++) { ctx.fillStyle = `rgba(0,0,0,${rnd(i) * 0.07})`; ctx.fillRect(rnd(i * 3.1) * W, rnd(i * 7.3) * H, 1.2, 1.2); }
+  };
+
+  P["blueprint"] = (ctx, t, W, H, c, text) => {
+    bg(ctx, W, H, c[0]); const u = t % LOOP;
+    ctx.strokeStyle = c[2]; ctx.lineWidth = 1;
+    for (let x = 0; x < W; x += 12) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+    for (let y = 0; y < H; y += 12) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+    ctx.strokeStyle = c[1]; ctx.lineWidth = 2; const p = easeInOut(u / 1.2);
+    const r = Math.min(W, H) * 0.22, cx = W * 0.42, cy = H * 0.52;
+    ctx.beginPath(); ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * p); ctx.stroke();
+    ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.arc(cx, cy, r * 0.5 * easeInOut((u - 0.6) / 0.8), 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+    const fill = easeOut((u - 1.6) / 0.6);
+    ctx.fillStyle = c[3]; ctx.fillRect(cx - r * 0.18, cy + r * 0.18 - r * 0.36 * fill, r * 0.36, r * 0.36 * fill);
+    const lp = easeOut((u - 1.2) / 0.5); ctx.strokeStyle = fill > 0.5 ? c[3] : c[1];
+    ctx.beginPath(); ctx.moveTo(cx + r * 0.2, cy); ctx.lineTo(cx + r * 0.2 + (W * 0.25) * lp, cy - H * 0.15 * lp); ctx.stroke();
+    if (lp > 0.9) txt(ctx, short(text), cx + r * 0.25 + W * 0.25, cy - H * 0.15, W * 0.035, fill > 0.5 ? c[3] : c[1], "'IBM Plex Mono', ui-monospace, monospace", 600, "left");
+  };
+
+  P["midnight-grid"] = (ctx, t, W, H, c, text) => {
+    bg(ctx, W, H, c[0]); const u = t % LOOP;
+    ctx.fillStyle = "#1E2A44"; for (let x = 10; x < W; x += 20) for (let y = 10; y < H; y += 20) ctx.fillRect(x, y, 2, 2);
+    const nodes = [[0.18, 0.5], [0.42, 0.3], [0.42, 0.7], [0.72, 0.5]], links = [[0, 1], [0, 2], [1, 3], [2, 3]];
+    const active = Math.min(3, Math.floor(u / 0.8));
+    links.forEach(([a, b], i) => {
+      const k = easeInOut((u - i * 0.5) / 0.6); if (k <= 0) return;
+      const [x1, y1] = nodes[a], [x2, y2] = nodes[b];
+      ctx.strokeStyle = "#22304D"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x1 * W, y1 * H); ctx.lineTo((x1 + (x2 - x1) * k) * W, (y1 + (y2 - y1) * k) * H); ctx.stroke();
+      if (k < 1) { ctx.fillStyle = c[3]; ctx.beginPath(); ctx.arc((x1 + (x2 - x1) * k) * W, (y1 + (y2 - y1) * k) * H, 4, 0, 7); ctx.fill(); }
+    });
+    nodes.forEach(([x, y], i) => {
+      const k = easeOut((u - i * 0.4) / 0.5); if (k <= 0) return;
+      ctx.fillStyle = "#111A2E"; ctx.strokeStyle = i === active ? c[3] : "#22304D"; ctx.lineWidth = 2;
+      const w = W * 0.16, h = H * 0.14; ctx.beginPath(); ctx.roundRect(x * W - w / 2, y * H - h / 2 + (1 - k) * 10, w, h, 6); ctx.fill(); ctx.stroke();
+      txt(ctx, i === 3 ? short(text, 12) : ["INPUT", "MODEL", "TOOLS", ""][i], x * W, y * H + (1 - k) * 10, W * 0.025, i === active ? c[1] : c[2], "Inter, system-ui", 600);
+    });
+  };
+
+  P["editorial-paper"] = (ctx, t, W, H, c, text) => {
+    bg(ctx, W, H, c[0]); const u = t % LOOP;
+    const base = H * 0.82, vals = [0.3, 0.42, 0.38, 0.5, 0.9];
+    ctx.strokeStyle = "#E3D3C3"; ctx.lineWidth = 1; for (let i = 0; i < 4; i++) { const y = base - i * H * 0.15; ctx.beginPath(); ctx.moveTo(W * 0.1, y); ctx.lineTo(W * 0.9, y); ctx.stroke(); }
+    vals.forEach((v, i) => {
+      const k = easeInOut((u - 0.2 - i * 0.1) / 1.4), h = v * H * 0.55 * k;
+      ctx.fillStyle = i === 4 ? c[3] : (u > 2.2 ? "#E3D3C3" : c[1]); ctx.fillRect(W * 0.14 + i * W * 0.15, base - h, W * 0.09, h);
+    });
+    const n = Math.round(90 * easeInOut((u - 0.6) / 1.4));
+    txt(ctx, n + "%", W * 0.14 + 4 * W * 0.15 + W * 0.045, base - vals[4] * H * 0.55 * easeInOut((u - 0.6) / 1.4) - H * 0.06, W * 0.05, c[3], "'Playfair Display', Georgia, serif", 900);
+    txt(ctx, (text || "Apa kata angka").slice(0, 28), W * 0.1, H * 0.12, W * 0.045, c[1], "'Playfair Display', Georgia, serif", 700, "left");
+  };
+
+  P["graphite-ui"] = (ctx, t, W, H, c, text) => {
+    bg(ctx, W, H, c[0]); const u = t % LOOP;
+    const pan = easeInOut(u / 1.2) * 20, x0 = W * 0.38 - pan, y0 = H * 0.14, pw = W * 0.7, ph = H * 0.72;
+    ctx.fillStyle = "#17181C"; ctx.strokeStyle = "#26282E"; ctx.lineWidth = 1; ctx.beginPath(); ctx.roundRect(x0, y0, pw, ph, 12); ctx.fill(); ctx.stroke();
+    for (let i = 0; i < 4; i++) {
+      const y = y0 + 24 + i * ph * 0.2, done = u > 1.6 + i * 0.25;
+      ctx.strokeStyle = done ? c[3] : "#3A3D45"; ctx.lineWidth = 2; ctx.strokeRect(x0 + 18, y, 12, 12);
+      if (done) { ctx.fillStyle = c[3]; ctx.fillRect(x0 + 18, y, 12, 12); }
+      ctx.fillStyle = done ? "#3A3D45" : "#2A2C33"; ctx.fillRect(x0 + 42, y + 2, pw * (0.35 + rnd(i) * 0.3), 8);
+    }
+    ctx.save(); ctx.beginPath(); ctx.rect(W * 0.06, H * 0.4, W * 0.3, H * 0.2); ctx.clip();
+    const m = easeOut((u - 0.3) / 0.6); txt(ctx, (text || "Ship faster").slice(0, 16), W * 0.06, H * 0.5 + (1 - m) * H * 0.2, W * 0.04, c[1], "Inter, system-ui", 600, "left"); ctx.restore();
+    const cx = x0 + 24 + (1 - easeInOut((u - 1.0) / 0.6)) * 80, cy = y0 + 30; ctx.fillStyle = c[3]; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + 10, cy + 12); ctx.lineTo(cx + 3, cy + 12); ctx.fill();
+  };
+
+  P["ink-line"] = (ctx, t, W, H, c) => {
+    bg(ctx, W, H, c[0]); const u = t % LOOP, boil = Math.floor(t * 7.5);
+    const prog = easeInOut(u / 2.4), N = 140;
+    ctx.strokeStyle = c[1]; ctx.lineCap = "round";
+    for (let i = 1; i <= N * prog; i++) {
+      const f = (k) => { const a = (k / N) * Math.PI * 3.2; const r = Math.min(W, H) * (0.08 + 0.22 * (k / N)); return [W / 2 + Math.cos(a) * r * 1.2 + (rnd(k + boil * 31) - 0.5) * 1.6, H / 2 + Math.sin(a) * r + (rnd(k * 3 + boil) - 0.5) * 1.6]; };
+      const [x1, y1] = f(i - 1), [x2, y2] = f(i); ctx.lineWidth = 1 + 5 * Math.sin((i / N) * Math.PI); ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    }
+    const s = clamp((u - 2.8) / 0.2); if (s > 0) {
+      const sc = 1.22 - 0.22 * s, sz = Math.min(W, H) * 0.12; ctx.save(); ctx.translate(W * 0.8, H * 0.78); ctx.scale(sc, sc);
+      ctx.fillStyle = c[3]; ctx.fillRect(-sz / 2, -sz / 2, sz, sz); txt(ctx, "動", 0, 2, sz * 0.62, c[0], "'Noto Serif JP', serif", 600); ctx.restore();
+    }
+  };
+
+  P["particle-field"] = (ctx, t, W, H, c, text) => {
+    const g = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, W * 0.7); g.addColorStop(0, c[2]); g.addColorStop(1, "#060912");
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    const u = t % LOOP, k = easeInOut(clamp((u - 0.4) / 1.6)) * (1 - easeInOut(clamp((u - 3.2) / 0.8))), R = Math.min(W, H) * 0.3;
+    for (let i = 0; i < 700; i++) {
+      const sx = rnd(i) * W, sy = rnd(i + 0.5) * H;
+      const th = rnd(i * 1.7) * Math.PI * 2, ph = Math.acos(2 * rnd(i * 2.3) - 1), rot = t * 0.4;
+      const X = Math.sin(ph) * Math.cos(th + rot), Z = Math.sin(ph) * Math.sin(th + rot), Y = Math.cos(ph);
+      const tx = W / 2 + X * R, ty = H / 2 + Y * R;
+      const sw = Math.sin(t * 1.3 + i) * 30 * (1 - k);
+      const x = sx + (tx - sx) * k + sw, y = sy + (ty - sy) * k + Math.cos(t + i) * 20 * (1 - k);
+      const depth = 0.5 + 0.5 * Z * k;
+      ctx.fillStyle = i % 20 === 0 ? c[3] : c[1]; ctx.globalAlpha = 0.35 + 0.6 * depth; ctx.fillRect(x, y, 1 + depth * 1.4, 1 + depth * 1.4);
+    }
+    ctx.globalAlpha = 1;
+  };
+
+  window.STYLE_PREVIEWS = P;
+  window.drawStylePreview = function (id, ctx, t, W, H, palette, text) {
+    const fn = P[id] || P["opus-showreel"];
+    ctx.save(); ctx.clearRect(0, 0, W, H);
+    try { fn(ctx, t, W, H, palette, text); } catch (e) { /* preview only */ }
+    ctx.restore();
+  };
+})();
+
+</script>
+  <script>
+// Turns dashboard state into the Motion Brief markdown (contract between human and AI).
+(function () {
+  const TRANSITION_SFX = {
+    cut: "hit", wipe: "whoosh", zoom: "whoosh", slide: "swoosh", morph: "swoosh",
+    glitch: "glitch", fade: "shimmer", "match-cut": "ui click",
+  };
+  const MUSIC = { synth: "Sintesis (buat musik sendiri dengan kode / Web Audio)", file: "File dari user", none: "Tanpa musik (SFX saja)" };
+  const SFX_MODE = {
+    agent: "Agent mencari SFX online (lalu unduh ke folder film)",
+    synth: "Sintesis lokal saja (Web Audio / DSP, tanpa internet)",
+    mix: "Cari online dulu; kalau tidak ketemu/lisensi tidak cocok → sintesis",
+  };
+  const FORMAT = {
+    "html-canvas": "Single-file HTML + Canvas 2D (`window.seek(t)` murni fungsi waktu)",
+    remotion: "Remotion (React/TypeScript composition)",
+    threejs: "HTML + Three.js (scene 3D, tetap `window.seek(t)`)",
+  };
+  const INTENSITY = ["", "sangat tenang", "tenang", "seimbang", "energik", "agresif"];
+
+  const slugify = (s) => (s || "film").toLowerCase().normalize("NFKD").replace(/[^\w\s-]/g, "").trim().replace(/[\s_]+/g, "-").slice(0, 48) || "film";
+  const f2 = (n) => (Math.round(n * 100) / 100).toFixed(2);
+  const esc = (s) => String(s ?? "").replace(/\|/g, "\\|").replace(/\n/g, " ");
+  const yamlStr = (s) => JSON.stringify(String(s ?? ""));
+
+  function timeline(state) {
+    const beat = 60 / (Number(state.project.bpm) || 120);
+    let b = 0;
+    return state.scenes.map((s, i) => {
+      const beats = Math.max(1, Number(s.beats) || 4);
+      const text = String(s.text ?? "").replace(/\{judul\}/gi, state.project.title || "Judul");
+      const row = { ...s, text, index: i + 1, beats, startBeat: b, endBeat: b + beats, start: b * beat, end: (b + beats) * beat };
+      b += beats;
+      return row;
+    });
+  }
+
+  function hits(state, tl, style) {
+    const beat = 60 / (Number(state.project.bpm) || 120);
+    const flavor = style?.sfx_query || "";
+    const out = [];
+    tl.forEach((s, i) => {
+      if (i > 0 && !(tl.length >= 2 && i === tl.length - 1)) {
+        const prev = tl[i - 1];
+        const cat = TRANSITION_SFX[prev.transition] || "whoosh";
+        out.push({ t: s.start, beat: s.startBeat, label: `transisi ${prev.index}→${s.index} (${prev.transition})`, cat });
+      }
+      if (s.text && s.text.trim()) out.push({ t: s.start + beat * 0.5, beat: s.startBeat + 0.5, label: `teks muncul: "${s.text.trim().slice(0, 32)}"`, cat: "ui click" });
+    });
+    if (tl.length >= 2) {
+      const last = tl[tl.length - 1];
+      const rs = Math.max(0, last.startBeat - 4);
+      out.push({ t: rs * beat, beat: rs, label: "riser menuju scene terakhir", cat: "riser" });
+      out.push({ t: last.start, beat: last.startBeat, label: "impact / reveal akhir", cat: "impact" });
+    }
+    const allowed = state.sound.categories || [];
+    return out
+      .filter((h) => !allowed.length || allowed.includes(h.cat))
+      .map((h) => ({ ...h, query: `${h.cat} ${flavor}`.trim() }))
+      .sort((a, b) => a.t - b.t);
+  }
+
+  function build(state, styles, elements = []) {
+    const p = state.project, st = state.style, snd = state.sound, o = state.output;
+    const overlay = p.mode === "overlay";
+    const el = overlay ? elements.find((e) => e.id === p.element) : null;
+    const style = styles.find((s) => s.id === st.id) || styles[0];
+    const slug = p.slug || slugify(p.title);
+    const tl = timeline(state);
+    const H = hits(state, tl, style);
+    const total = tl.length ? tl[tl.length - 1].end : 0;
+    const dur = Number(p.duration) || 15;
+    const palette = (st.palette && st.palette.length ? st.palette : style.palette);
+    const L = [];
+
+    L.push("---");
+    L.push("generator: motion-generator/v2");
+    L.push(`mode: ${overlay ? "overlay" : "full"}`);
+    if (el) L.push(`element: ${el.id}`);
+    L.push(`slug: ${slug}`);
+    L.push(`title: ${yamlStr(p.title || "Untitled")}`);
+    L.push(`style: ${style.id}`);
+    L.push(`duration_s: ${dur}`);
+    L.push(`aspect: "${p.aspect}"`);
+    L.push(`fps: ${p.fps}`);
+    L.push(`bpm: ${p.bpm}`);
+    L.push(`language: ${p.lang}`);
+    L.push(`output: ${o.format}`);
+    L.push(`loop: ${!!p.loop}`);
+    L.push(`export: ${overlay ? (o.alpha === "greenscreen" ? "greenscreen" : "alpha") : "mp4"}`);
+    L.push("---", "");
+    L.push(`# Motion Brief: ${p.title || "Untitled"}`, "");
+    L.push("> Brief ini dibuat oleh dashboard Motion Generator. Kerjakan dengan skill `motion-generator`.",
+      "> Semua keputusan di bawah adalah keputusan user. Jangan diganti tanpa bertanya.", "");
+
+    L.push("## 1. Brief", "");
+    L.push(p.brief?.trim() || "_(tidak ada brief, buat showreel bebas yang menunjukkan kemampuan motion design)_", "");
+    if (p.template) L.push(`**Template:** ${p.template}`, "");
+    if (p.audience?.trim()) L.push(`**Audiens:** ${p.audience.trim()}`, "");
+
+    L.push("## 2. Spesifikasi teknis", "");
+    L.push("| Item | Nilai |", "|---|---|");
+    L.push(`| Durasi | ${dur} detik |`);
+    L.push(`| Rasio | ${p.aspect} (${({ "16:9": "1920×1080", "9:16": "1080×1920", "1:1": "1080×1080", "4:5": "1080×1350" })[p.aspect] || ""}) |`);
+    L.push(`| FPS | ${p.fps} |`);
+    L.push(`| Tempo | ${p.bpm} BPM (1 beat = ${f2(60 / p.bpm)} s, 1 bar = ${f2(240 / p.bpm)} s) |`);
+    L.push(`| Bahasa teks | ${p.lang} |`);
+    L.push(`| Format kode | ${FORMAT[o.format]} |`);
+    L.push(`| Jenis | ${overlay ? "Elemen untuk editan (overlay di atas footage)" : "Video full"} |`);
+    L.push(`| Loop | ${p.loop ? "ya: frame terakhir = frame pertama" : "tidak"} |`);
+    if (overlay) L.push(`| Ekspor | ${o.alpha === "greenscreen" ? "latar hijau #00FF00 polos untuk chroma key" : "latar transparan: MOV ProRes 4444 + WebM VP9 alpha"} |`);
+    L.push("");
+    if (Math.abs(total - dur) > 0.05) {
+      L.push(`> ⚠️ Total scene = **${f2(total)} s**, durasi target = **${dur} s**. Sesuaikan panjang scene secara proporsional agar pas ${dur} s, dengan cut tetap di beat.`, "");
+    }
+
+    if (el) {
+      L.push(`## 2b. Elemen: ${el.name}`, "");
+      L.push(`${el.desc}. Kelompok: ${el.group}.`, "");
+      L.push("- Elemen ini akan **ditumpuk di atas footage** di editor video (CapCut / Premiere / DaVinci). Jangan gambar latar penuh.");
+      L.push("- Sisakan area aman; jangan menutupi wajah atau zona caption bawah (kecuali elemen ini adalah caption).");
+      L.push("- Buat bagian yang bisa diganti (teks, warna) jadi variabel di atas file, supaya mudah dipakai ulang.");
+      L.push(`- Struktur waktu: **masuk → tahan → keluar**. Saran SFX: ${el.sfx}.`, "");
+    }
+    L.push(`## 3. Style: ${style.name}`, "");
+    L.push(`${style.summary}.`, "");
+    L.push(`- **Palet:** ${palette.map((c) => "`" + c + "`").join(" ")} (urutan: latar, utama, sekunder, aksen…)`);
+    L.push(`- **Tipografi:** ${st.font?.trim() || style.type}`);
+    L.push(`- **Intensitas gerak:** ${st.intensity}/5 (${INTENSITY[st.intensity]})`);
+    L.push(`- **Aturan gerak:** ${style.motion.join("; ")}`);
+    L.push(`- **Hindari:** ${(style.avoid || []).join("; ")}`);
+    if (style.credit) L.push(`- **Asal style:** ${style.credit}`);
+    L.push(`- **Engine yang disarankan:** ${style.engine}`);
+    L.push(`- **Referensi:** \`sources/02-katalog-style.md\` bagian "${style.name}", dan \`sources/03-prinsip-gerak.md\``);
+    if (st.notes?.trim()) L.push(`- **Catatan style dari user:** ${st.notes.trim()}`);
+    L.push("");
+
+    L.push("## 4. Shot list (sketsa)", "");
+    L.push("| # | Scene | Beat | Waktu (s) | Teks di layar | Visual | Transisi keluar |", "|---|---|---|---|---|---|---|");
+    tl.forEach((s) => {
+      L.push(`| ${s.index} | ${esc(s.name)} | ${s.startBeat}–${s.endBeat} | ${f2(s.start)}–${f2(s.end)} | ${esc(s.text) || "_(AI tulis copy dari brief)_"} | ${esc(s.visual) || "—"} | ${s.index === tl.length ? "— (akhir)" : s.transition} |`);
+    });
+    L.push("");
+
+    L.push("## 5. Timeline HITS", "");
+    L.push("Setiap aksen visual **dan** suara dijadwalkan dari daftar ini (satu sumber kebenaran).", "");
+    L.push("| Waktu (s) | Beat | Momen | Kategori SFX | Query pencarian |", "|---|---|---|---|---|");
+    H.forEach((h) => L.push(`| ${f2(h.t)} | ${h.beat} | ${esc(h.label)} | ${h.cat} | \`${h.query}\` |`));
+    L.push("");
+    L.push("```js", "// salin ke kode film", "const HITS = [");
+    H.forEach((h) => L.push(`  [${f2(h.t)}, ${JSON.stringify(h.label)}, ${JSON.stringify(h.cat)}],`));
+    L.push("];", "```", "");
+
+    L.push("## 6. Rencana suara", "");
+    if (snd.preset === "none") {
+      L.push("- **Tanpa suara.** Timeline HITS hanya dipakai untuk aksen visual. Jangan buat/unduh audio apa pun.", "");
+    } else {
+    L.push(`- **Musik:** ${MUSIC[snd.music]}${snd.music === "file" && snd.musicFile ? ` → \`${snd.musicFile}\`` : ""}${snd.musicMood?.trim() ? ` · mood: ${snd.musicMood.trim()}` : ""}`);
+    L.push(`- **Mode SFX:** ${SFX_MODE[snd.sfxMode]}`);
+    if (snd.sfxMode !== "synth") {
+      L.push(`- **Sumber online:** ${(snd.sources || []).join(", ") || "openverse"}`);
+      L.push(`- **Lisensi yang diizinkan:** ${(snd.license || []).join(", ") || "cc0"}. Catat judul, kreator, URL, dan lisensi tiap file di \`films/${slug}/audio/CREDITS.md\`.`);
+    }
+    L.push(`- **Kategori SFX yang dipakai:** ${(snd.categories || []).join(", ") || "semua"}`);
+    L.push(`- **Karakter SFX style ini:** ${style.sfx.join(", ")}`);
+    L.push("- **Mix:** musik di bawah SFX; target loudness sekitar −14 LUFS; SFX tidak boleh clipping.", "");
+    }
+
+    L.push("## 7. Deliverables", "");
+    L.push(`Semua di \`films/${slug}/\`:`, "");
+    L.push(`- [ ] Kode film (${FORMAT[o.format]})`);
+    if (snd.preset !== "none") L.push("- [ ] `audio/` berisi SFX yang dipakai + `CREDITS.md`");
+    if (o.storyboard) L.push("- [ ] `storyboard.png`: contact sheet 1 frame per scene (sketsa untuk direview)");
+    if (o.mp4 && !overlay) L.push(`- [ ] \`out/${slug}.mp4\` (${p.aspect}, ${p.fps} fps, dengan audio)`);
+    if (o.mp4 && overlay && o.alpha !== "greenscreen") L.push(`- [ ] \`out/${slug}.mov\` (ProRes 4444, alpha) + \`out/${slug}.webm\` (VP9 alpha) + \`out/${slug}_sfx.wav\` terpisah`);
+    if (o.mp4 && overlay && o.alpha === "greenscreen") L.push(`- [ ] \`out/${slug}_greenscreen.mp4\` (latar #00FF00) + \`out/${slug}_sfx.wav\``);
+    L.push("");
+    if (o.extra?.trim()) { L.push("### Catatan tambahan dari user", "", o.extra.trim(), ""); }
+
+    L.push("## 8. Checklist kualitas", "");
+    L.push("- [ ] Setiap frame = fungsi murni dari waktu (`seek(t)` bisa lompat ke frame mana pun).");
+    L.push("- [ ] Semua cut & aksen jatuh di waktu pada Timeline HITS (toleransi ±1 frame).");
+    L.push("- [ ] Palet hanya dari §3; aturan \"Hindari\" dipatuhi.");
+    L.push("- [ ] Teks terbaca di layar HP (cek di setengah ukuran).");
+    if (p.loop) L.push("- [ ] Loop mulus: frame terakhir menyambung ke frame pertama tanpa lompatan.");
+    if (overlay) L.push("- [ ] Latar benar-benar transparan / hijau polos; cek dengan menumpuk di atas footage contoh.");
+    L.push("- [ ] Tidak ada SFX tanpa lisensi yang jelas.");
+    L.push("- [ ] Storyboard dikirim ke user sebelum render final (kalau diminta).");
+    L.push("");
+    return { markdown: L.join("\n"), slug, total, hits: H, timeline: tl };
+  }
+
+  window.MotionBrief = { build, slugify, timeline, TRANSITION_SFX };
+})();
+
+</script>
+  <script>
+(function () {
+  const STYLES = (window.STYLE_DATA && window.STYLE_DATA.styles) || [];
+  const TAGS = (window.STYLE_DATA && window.STYLE_DATA.tags) || {};
+  const ELEMENTS = (window.ELEMENT_DATA && window.ELEMENT_DATA.elements) || [];
+  const KEY = "motion-generator/state/v2";
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const TRANSITIONS = ["cut", "wipe", "zoom", "slide", "morph", "glitch", "fade", "match-cut"];
+  const ALL_SFX = ["whoosh", "swoosh", "hit", "impact", "riser", "ui click", "glitch", "shimmer"];
+
+  // ---------- templates (one click = all defaults) ----------
+  const TEMPLATES = [
+    { id: "reels", ic: "📱", name: "Reels / TikTok promo", mode: "full", aspect: "9:16", duration: 15, style: "poster-pop", kind: "promo", tags: ["promo", "hook"] },
+    { id: "yt-intro", ic: "▶️", name: "Intro YouTube", mode: "full", aspect: "16:9", duration: 8, style: "particle-field", kind: "intro", tags: ["tech", "brand"] },
+    { id: "explainer", ic: "💡", name: "Explainer", mode: "full", aspect: "16:9", duration: 30, style: "midnight-grid", kind: "explainer", bpm: 100, tags: ["explainer", "tech"] },
+    { id: "data", ic: "📊", name: "Data & angka", mode: "full", aspect: "16:9", duration: 12, style: "editorial-paper", kind: "data", tags: ["data"] },
+    { id: "app", ic: "💻", name: "Demo aplikasi", mode: "full", aspect: "16:9", duration: 20, style: "graphite-ui", kind: "promo", tags: ["app", "tech"] },
+    { id: "logo", ic: "✨", name: "Logo reveal", mode: "full", aspect: "16:9", duration: 6, style: "ink-line", kind: "intro", tags: ["brand", "logo"] },
+    { id: "caption", ic: "💬", name: "Caption untuk editan", mode: "overlay", element: "caption-kata", aspect: "9:16", duration: 10, style: "kinetic-type", kind: "element", tags: ["caption", "hook"] },
+    { id: "lower", ic: "🏷️", name: "Lower third", mode: "overlay", element: "lower-third", aspect: "16:9", duration: 6, style: "swiss", kind: "element", tags: ["editan"] },
+  ];
+  const KINDS = {
+    promo: [["Hook", "{judul}", "teks besar masuk dengan punch, latar bergerak", "wipe", 0.16], ["Masalah / ide", "", "kenapa ini penting? elemen muncul satu per satu", "slide", 0.18], ["Poin 1", "", "manfaat/fitur pertama dianimasikan", "zoom", 0.22], ["Poin 2", "", "manfaat/fitur kedua, morph dari scene sebelumnya", "cut", 0.22], ["Reveal + CTA", "{judul}", "nama/logo reveal + ajakan, hold 1 bar", "cut", 0.22]],
+    intro: [["Build", "", "elemen abstrak berkumpul / tergambar", "morph", 0.45], ["Reveal", "{judul}", "judul/logo muncul jelas", "fade", 0.35], ["Hold", "{judul}", "diam sebentar, aksen kecil", "cut", 0.2]],
+    explainer: [["Pertanyaan", "", "pertanyaan pembuka yang memancing", "wipe", 0.15], ["Konsep", "", "diagram konsep utama dibangun", "slide", 0.25], ["Langkah 1", "", "langkah pertama, node demi node", "slide", 0.2], ["Langkah 2", "", "langkah kedua", "zoom", 0.2], ["Ringkasan", "{judul}", "ringkasan + penutup", "cut", 0.2]],
+    data: [["Judul", "", "judul data muncul", "wipe", 0.2], ["Chart", "", "garis/bar tergambar, angka menghitung", "zoom", 0.45], ["Insight", "", "satu angka penting disorot", "cut", 0.35]],
+    element: [["Masuk", "{judul}", "elemen masuk", "cut", 0.2], ["Tahan", "{judul}", "elemen diam, terbaca jelas", "cut", 0.6], ["Keluar", "", "elemen keluar bersih", "cut", 0.2]],
+  };
+
+  const defaults = () => ({
+    project: { title: "", brief: "", lines: "", audience: "", duration: 15, bpm: 120, aspect: "9:16", fps: 60, lang: "Indonesia", mode: "full", element: "caption-kata", loop: false, template: "" },
+    style: { id: "poster-pop", palette: [...(STYLES.find((s) => s.id === "poster-pop")?.palette || STYLES[0].palette)], font: "", intensity: 3, notes: "" },
+    scenes: [], scenesEdited: false, kind: "promo",
+    sound: { preset: "full", music: "synth", musicFile: "", musicMood: "", sfxMode: "mix", sources: ["openverse"], license: ["cc0", "by"], categories: [...ALL_SFX] },
+    output: { format: "html-canvas", storyboard: true, mp4: true, extra: "", alpha: "alpha" },
+    ui: { filter: "rec", tplTags: ["promo", "hook"] },
+  });
+
+  let state;
+  const get = (path) => path.split(".").reduce((o, k) => o?.[k], state);
+  const set = (path, v) => { const ks = path.split("."); const last = ks.pop(); ks.reduce((o, k) => o[k], state)[last] = v; };
+  const style = () => STYLES.find((s) => s.id === state.style.id) || STYLES[0];
+  const element = () => ELEMENTS.find((e) => e.id === state.project.element);
+  const totalBeats = () => Math.max(1, Math.round((Number(state.project.duration) || 15) * (Number(state.project.bpm) || 120) / 60));
+  const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+
+  function safeGet() { try { return localStorage.getItem(KEY); } catch (e) { return null; } }
+  function load() {
+    try {
+      const s = JSON.parse(safeGet());
+      if (s && s.project) { const d = defaults(); for (const k of Object.keys(d)) if (s[k] !== undefined) d[k] = (typeof d[k] === "object" && !Array.isArray(d[k])) ? { ...d[k], ...s[k] } : s[k]; return d; }
+    } catch (e) {}
+    const d = defaults(); state = d; autoScenes(); return d;
+  }
+  let saveT;
+  function save() { clearTimeout(saveT); saveT = setTimeout(() => { try { localStorage.setItem(KEY, JSON.stringify(state)); $("#saved").textContent = "Tersimpan otomatis ✓"; } catch (e) { $("#saved").textContent = ""; } }, 200); $("#saved").textContent = "Menyimpan…"; }
+
+  // ---------- scenes ----------
+  function autoScenes() {
+    const tb = totalBeats();
+    const lines = (state.project.lines || "").split("\n").map((x) => x.trim()).filter(Boolean);
+    let rows;
+    if (lines.length) rows = lines.map((l, i) => [`Scene ${i + 1}`, l, "", i === lines.length - 1 ? "cut" : ["wipe", "slide", "zoom", "cut"][i % 4], 1 / lines.length]);
+    else rows = KINDS[state.project.mode === "overlay" ? "element" : (state.kind || "promo")] || KINDS.promo;
+    const beats = rows.map((r) => Math.max(1, Math.round(r[4] * tb)));
+    beats[beats.length - 1] = Math.max(1, beats[beats.length - 1] + tb - beats.reduce((a, b) => a + b, 0));
+    state.scenes = rows.map(([name, text, visual, transition], i) => ({ name, text, visual, transition, beats: beats[i] }));
+    state.scenesEdited = false;
+  }
+  function fitScenes() {
+    const tb = totalBeats(), cur = state.scenes.reduce((a, s) => a + (Number(s.beats) || 1), 0); let acc = 0;
+    state.scenes.forEach((s, i) => { if (i === state.scenes.length - 1) s.beats = Math.max(1, tb - acc); else { s.beats = Math.max(1, Math.round((Number(s.beats) || 1) * tb / cur)); acc += s.beats; } });
+  }
+  function maybeAuto() { if (!state.scenesEdited) autoScenes(); else fitScenes(); renderScenes(); }
+
+  // ---------- generic bindings ----------
+  function bind() {
+    $$("[data-bind]").forEach((el) => {
+      const path = el.dataset.bind, num = el.hasAttribute("data-num"), v = get(path);
+      if (el.type === "checkbox") el.checked = !!v; else el.value = v ?? "";
+      el.oninput = el.onchange = () => { set(path, el.type === "checkbox" ? el.checked : num ? Number(el.value) : el.value); changed(path); };
+    });
+    $$("[data-seg]").forEach((el) => {
+      const path = el.dataset.seg, num = el.hasAttribute("data-num"), bool = el.hasAttribute("data-bool");
+      $$("button", el).forEach((b) => {
+        b.onclick = () => { set(path, num ? Number(b.dataset.v) : bool ? b.dataset.v === "true" : b.dataset.v); changed(path); };
+      });
+    });
+    $$("[data-chips]").forEach((el) => {
+      const path = el.dataset.chips;
+      $$("button", el).forEach((b) => (b.onclick = () => {
+        const arr = new Set(get(path) || []); arr.has(b.dataset.v) ? arr.delete(b.dataset.v) : arr.add(b.dataset.v); set(path, [...arr]); changed(path);
+      }));
+    });
+    $("#idea").value = state.project.brief; $("#idea").oninput = (e) => { state.project.brief = e.target.value; changed("project.brief"); };
+    $("#title").value = state.project.title; $("#title").oninput = (e) => { state.project.title = e.target.value; changed("project.title"); };
+    $("#lines").value = state.project.lines; $("#lines").oninput = (e) => { state.project.lines = e.target.value; state.scenesEdited = false; changed("project.lines"); };
+    $$("#mode button").forEach((b) => (b.onclick = () => { state.project.mode = b.dataset.v; changed("project.mode"); }));
+  }
+  function syncControls() {
+    $$("[data-seg]").forEach((el) => { const v = String(get(el.dataset.seg)); $$("button", el).forEach((b) => b.classList.toggle("on", b.dataset.v === v)); });
+    $$("[data-chips]").forEach((el) => { const v = get(el.dataset.chips) || []; $$("button", el).forEach((b) => b.classList.toggle("on", v.includes(b.dataset.v))); });
+    $$("[data-bind]").forEach((el) => { if (document.activeElement === el) return; const v = get(el.dataset.bind); if (el.type === "checkbox") el.checked = !!v; else el.value = v ?? ""; });
+    $$("#mode button").forEach((b) => b.classList.toggle("on", b.dataset.v === state.project.mode));
+    $$("[data-show]").forEach((el) => { const m = el.dataset.show.match(/^([\w.]+)(!?=)(.+)$/); const v = String(get(m[1])); el.hidden = m[2] === "=" ? v !== m[3] : v === m[3]; });
+    $("#block-element").hidden = state.project.mode !== "overlay";
+    $("#n-quick").textContent = state.project.mode === "overlay" ? "3" : "2";
+    $("#intensity-label").textContent = ["", "sangat tenang", "tenang", "seimbang", "energik", "agresif"][state.style.intensity] || "";
+    $$(".tpl").forEach((b) => b.classList.toggle("on", b.dataset.id === state.project.template));
+  }
+
+  // ---------- templates ----------
+  function renderTemplates() {
+    $("#templates").innerHTML = TEMPLATES.map((t) => `<button class="tpl" data-id="${t.id}"><span class="ic">${t.ic}</span>${t.name}</button>`).join("");
+    $$(".tpl").forEach((b) => (b.onclick = () => applyTemplate(TEMPLATES.find((t) => t.id === b.dataset.id))));
+  }
+  function applyTemplate(t) {
+    Object.assign(state.project, { template: t.name, mode: t.mode, aspect: t.aspect, duration: t.duration, bpm: t.bpm || 120 });
+    if (t.element) state.project.element = t.element;
+    state.kind = t.kind; state.ui.tplTags = t.tags; state.ui.filter = "rec";
+    pickStyle(t.style, true);
+    autoScenes(); renderScenes(); renderElements();
+    changed("template");
+    toast(`Template "${t.name}" dipakai. Semua sudah diisi default.`);
+  }
+
+  // ---------- styles ----------
+  function recommended() {
+    const ids = new Set();
+    if (state.project.mode === "overlay" && element()) element().styles.forEach((x) => ids.add(x));
+    const tags = state.ui.tplTags || [];
+    STYLES.forEach((s) => { if ((s.best_for || []).some((b) => tags.includes(b))) ids.add(s.id); });
+    return ids;
+  }
+  const cards = [];
+  function renderFilters() {
+    const used = new Set(STYLES.flatMap((s) => s.best_for || []));
+    const keys = ["promo", "hook", "explainer", "data", "tech", "app", "brand", "santai", "musik", "editan"].filter((k) => used.has(k));
+    $("#filters").innerHTML = `<button data-f="rec">⭐ Rekomendasi</button><button data-f="all">Semua (${STYLES.length})</button>` + keys.map((k) => `<button data-f="${k}">${TAGS[k] || k}</button>`).join("");
+    $$("#filters button").forEach((b) => (b.onclick = () => { state.ui.filter = b.dataset.f; renderStyles(); save(); }));
+  }
+  function renderStyles() {
+    const rec = recommended(), f = state.ui.filter;
+    let list = STYLES.filter((s) => f === "all" || (f === "rec" ? rec.has(s.id) || s.id === state.style.id : (s.best_for || []).includes(f)));
+    if (!list.length) list = STYLES;
+    list = [...list].sort((a, b) => (rec.has(b.id) - rec.has(a.id)));
+    $$("#filters button").forEach((b) => b.classList.toggle("on", b.dataset.f === f));
+    const grid = $("#style-grid"); grid.innerHTML = ""; cards.length = 0;
+    list.forEach((s) => {
+      const b = document.createElement("button");
+      b.className = "style-card" + (s.id === state.style.id ? " on" : "");
+      b.innerHTML = `<canvas width="320" height="200"></canvas>${rec.has(s.id) ? '<span class="rec">Rekomendasi</span>' : ""}<span class="tick">✓</span>
+        <div class="meta"><b>${s.name}</b><small>${(s.best_for || []).map((x) => TAGS[x] || x).slice(0, 2).join(" · ")}</small></div>`;
+      b.onclick = () => { pickStyle(s.id); changed("style.id"); };
+      grid.appendChild(b); cards.push({ id: s.id, canvas: $("canvas", b), palette: s.palette, el: b });
+    });
+    renderStyleDetail();
+  }
+  function pickStyle(id, silent) {
+    const s = STYLES.find((x) => x.id === id); if (!s) return;
+    state.style.id = id; state.style.palette = [...s.palette];
+    cards.forEach((c) => c.el.classList.toggle("on", c.id === id));
+    renderStyleDetail(); renderPalette();
+    if (!silent) renderStyles();
+  }
+  function renderStyleDetail() {
+    const s = style();
+    $("#style-detail").innerHTML = `<b>${s.name}</b>: ${s.summary}.
+      <ul><li><b>Gerak:</b> ${s.motion.slice(0, 3).join(" · ")}</li><li><b>Hindari:</b> ${(s.avoid || []).join(" · ")}</li><li><b>SFX:</b> ${s.sfx.join(" · ")}</li></ul>`;
+  }
+  function renderPalette() {
+    const el = $("#palette"); el.innerHTML = "";
+    state.style.palette.forEach((c, i) => {
+      const sw = document.createElement("label"); sw.className = "swatch"; sw.style.background = c; sw.title = c;
+      const inp = document.createElement("input"); inp.type = "color"; inp.value = c;
+      inp.oninput = () => { state.style.palette[i] = inp.value; sw.style.background = inp.value; changed("style.palette"); };
+      sw.appendChild(inp); el.appendChild(sw);
+    });
+    const r = document.createElement("button"); r.className = "btn small ghost"; r.textContent = "↺ warna asli style";
+    r.onclick = () => { state.style.palette = [...style().palette]; renderPalette(); changed("style.palette"); };
+    el.appendChild(r);
+  }
+
+  // ---------- elements ----------
+  function renderElements() {
+    const groups = [...new Set(ELEMENTS.map((e) => e.group))];
+    $("#elements").innerHTML = groups.map((g) => `<div class="el-group"><h4>${g}</h4><div class="el-grid">${ELEMENTS.filter((e) => e.group === g)
+      .map((e) => `<button class="el${e.id === state.project.element ? " on" : ""}" data-id="${e.id}"><b>${e.name}</b><small>${e.desc}</small></button>`).join("")}</div></div>`).join("");
+    $$("#elements .el").forEach((b) => (b.onclick = () => {
+      state.project.element = b.dataset.id; state.ui.filter = "rec";
+      const e = element(); if (e && !e.styles.includes(state.style.id)) pickStyle(e.styles[0], true);
+      renderElements(); renderStyles(); changed("project.element");
+    }));
+  }
+
+  // ---------- scene editor ----------
+  function renderScenes() {
+    const tl = window.MotionBrief.timeline(state), box = $("#scenes"); box.innerHTML = "";
+    state.scenes.forEach((s, i) => {
+      const r = tl[i], row = document.createElement("div"); row.className = "scene";
+      row.innerHTML = `<div class="idx">${i + 1}</div>
+        <label class="field">Nama<input data-k="name" value="${esc(s.name)}" /></label>
+        <label class="field">Beat<input type="number" min="1" data-k="beats" value="${s.beats}" /></label>
+        <label class="field">Transisi<select data-k="transition">${TRANSITIONS.map((t) => `<option ${t === s.transition ? "selected" : ""}>${t}</option>`).join("")}</select></label>
+        <div class="tools"><button class="btn tiny ghost" data-a="up">↑</button><button class="btn tiny ghost" data-a="down">↓</button><button class="btn tiny ghost danger" data-a="del">✕</button></div>
+        <label class="field wide">Teks di layar<input data-k="text" value="${esc(s.text)}" placeholder="kosong = AI tulis · {judul} = judul" /></label>
+        <label class="field wide">Visual / gerak<input data-k="visual" value="${esc(s.visual)}" /></label>
+        <div class="time">${r.start.toFixed(2)}s → ${r.end.toFixed(2)}s</div>`;
+      $$("[data-k]", row).forEach((el) => (el.oninput = el.onchange = () => {
+        s[el.dataset.k] = el.dataset.k === "beats" ? Math.max(1, Number(el.value) || 1) : el.value;
+        state.scenesEdited = true; updateTimes(); changed("scenes");
+      }));
+      $$("[data-a]", row).forEach((b) => (b.onclick = () => {
+        const a = b.dataset.a, arr = state.scenes;
+        if (a === "del") arr.splice(i, 1);
+        if (a === "up" && i > 0) [arr[i - 1], arr[i]] = [arr[i], arr[i - 1]];
+        if (a === "down" && i < arr.length - 1) [arr[i + 1], arr[i]] = [arr[i], arr[i + 1]];
+        state.scenesEdited = true; renderScenes(); changed("scenes");
+      }));
+      box.appendChild(row);
+    });
+    updateTimes();
+  }
+  function updateTimes() {
+    const tl = window.MotionBrief.timeline(state);
+    $$("#scenes .time").forEach((el, i) => tl[i] && (el.textContent = `${tl[i].start.toFixed(2)}s → ${tl[i].end.toFixed(2)}s`));
+    const tot = tl.length ? tl[tl.length - 1].end : 0, d = Number(state.project.duration) || 15;
+    $("#scene-total").textContent = `${state.scenes.length} scene · ${tot.toFixed(1)} / ${d} dtk ${Math.abs(tot - d) < 0.05 ? "✓" : "(klik Pas-kan)"} · ${state.scenesEdited ? "diedit manual" : "otomatis"}`;
+  }
+
+  // ---------- sound preset ----------
+  function applySoundPreset() {
+    const p = state.sound.preset;
+    state.sound.music = p === "full" ? (state.sound.musicFile ? "file" : "synth") : "none";
+    if (p === "none") state.sound.sfxMode = "synth";
+  }
+
+  // ---------- build ----------
+  let built;
+  function rebuild() {
+    built = window.MotionBrief.build(state, STYLES, ELEMENTS);
+    $("#md").innerHTML = highlight(built.markdown);
+    $("#cmd").textContent = `buat video dari prompts/${built.slug}.md`;
+    $("#hits").innerHTML = built.hits.map((h) => `<div class="hit"><span class="t">${h.t.toFixed(2)}s</span><span>${esc(h.label)}</span><span class="c">${h.cat}</span></div>`).join("");
+    const s = style(), e = element(), ov = state.project.mode === "overlay";
+    const sum = [`<span class="acc">${s.name}</span>`, `<span>${state.project.aspect}</span>`, `<span>${state.project.duration} dtk</span>`,
+      `<span>${ov ? "🧩 " + (e ? e.name : "elemen") : "🎬 video full"}</span>`, state.project.loop ? "<span>loop</span>" : "",
+      `<span>${({ full: "musik + SFX", sfx: "SFX saja", none: "tanpa suara" })[state.sound.preset]}</span>`].join("");
+    $("#summary").innerHTML = sum;
+    $("#mobile-sum").textContent = `${s.name} · ${state.project.aspect} · ${state.project.duration} dtk`;
+  }
+  function highlight(md) {
+    let n = 0, fm = false;
+    return md.split("\n").map((line) => {
+      const e = esc(line);
+      if (line === "---" && n < 2) { n++; fm = n === 1; return `<span class="fm">${e}</span>`; }
+      if (fm) return `<span class="fm">${e}</span>`;
+      if (/^#{1,3} /.test(line)) return `<span class="h">${e}</span>`;
+      if (/^\|/.test(line)) return `<span class="tb">${e}</span>`;
+      return e;
+    }).join("\n");
+  }
+
+  function changed(path) {
+    if (path === "project.duration" || path === "project.bpm" || path === "project.lines" || path === "project.mode") maybeAuto();
+    if (path === "project.mode") { state.ui.filter = "rec"; if (state.project.mode === "overlay") { renderElements(); const e = element(); if (e && !e.styles.includes(state.style.id)) pickStyle(e.styles[0], true); } renderStyles(); }
+    if (path === "sound.preset" || path === "sound.musicFile") applySoundPreset();
+    syncControls(); rebuild(); sizePreview(); save();
+  }
+
+  // ---------- preview ----------
+  const pv = $("#preview"), pctx = pv.getContext("2d"); let PW = 0, PH = 0;
+  function sizePreview() {
+    const [a, b] = state.project.aspect.split(":").map(Number), maxW = 330, maxH = window.innerWidth < 980 ? 240 : 400;
+    let w = maxW, h = (maxW * b) / a; if (h > maxH) { h = maxH; w = (maxH * a) / b; }
+    if (Math.round(w) === PW && Math.round(h) === PH) return;
+    PW = Math.round(w); PH = Math.round(h); const dpr = window.devicePixelRatio || 1;
+    pv.width = PW * dpr; pv.height = PH * dpr; pv.style.width = PW + "px"; pv.style.height = PH + "px";
+  }
+  const checker = (ctx, W, H) => { for (let y = 0; y < H; y += 12) for (let x = 0; x < W; x += 12) { ctx.fillStyle = ((x + y) / 12) % 2 ? "#3a3a38" : "#2c2c2a"; ctx.fillRect(x, y, 12, 12); } };
+  function frame(now) {
+    const t = now / 1000, tl = built?.timeline || [], total = tl.length ? tl[tl.length - 1].end : 4;
+    const lt = t % Math.max(total, 0.5), sc = tl.find((s) => lt >= s.start && lt < s.end) || tl[0];
+    const dpr = window.devicePixelRatio || 1; pctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const text = sc?.text || state.project.title || state.project.brief.split(/[.,\n]/)[0] || "Motion";
+    if (state.project.mode === "overlay") {
+      // show the element over a fake footage background so the user understands it's an overlay
+      pctx.clearRect(0, 0, PW, PH); checker(pctx, PW, PH);
+      const w = PW, h = PH * 0.32; const off = document.createElement("canvas");
+      off.width = w * dpr; off.height = h * dpr; const o = off.getContext("2d"); o.setTransform(dpr, 0, 0, dpr, 0, 0);
+      window.drawStylePreview(state.style.id, o, sc ? lt - sc.start : t, w, h, state.style.palette, text);
+      pctx.drawImage(off, 0, PH - h - PH * 0.12, w, h);
+      pctx.fillStyle = "rgba(255,255,255,.55)"; pctx.font = "600 11px system-ui"; pctx.textAlign = "left"; pctx.fillText("contoh footage (overlay ditumpuk di sini)", 10, 18);
+    } else window.drawStylePreview(state.style.id, pctx, sc ? lt - sc.start : t, PW, PH, state.style.palette, text);
+    $("#scene-now").textContent = sc ? `scene ${sc.index}/${tl.length} · ${sc.name} · ${lt.toFixed(1)}s` : "";
+    cards.forEach((c) => {
+      const r = c.canvas.getBoundingClientRect(); if (c.drawn && (r.bottom < 0 || r.top > innerHeight)) return; c.drawn = true;
+      const ctx = c.canvas.getContext("2d"); ctx.setTransform(1, 0, 0, 1, 0, 0);
+      window.drawStylePreview(c.id, ctx, t, c.canvas.width, c.canvas.height, c.palette, state.project.title || c.id.replace(/-/g, " "));
+    });
+    requestAnimationFrame(frame);
+  }
+
+  // ---------- actions ----------
+  function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 2200); }
+  function download(name, text, type) { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); }
+  async function copy(text, msg) {
+    try { await navigator.clipboard.writeText(text); } catch (e) { const ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); }
+    toast(msg);
+  }
+  $$("[data-copy]").forEach((b) => (b.onclick = () => copy(built.markdown, "Prompt disalin ✓ Tempel ke Claude Code")));
+  $("#copy-cmd").onclick = () => copy($("#cmd").textContent, "Perintah disalin ✓");
+  $("#btn-download").onclick = () => { download(`${built.slug}.md`, built.markdown, "text/markdown"); toast(`${built.slug}.md diunduh → simpan ke prompts/`); };
+  $("#btn-auto").onclick = () => { autoScenes(); renderScenes(); changed("scenes"); };
+  $("#btn-fit").onclick = () => { fitScenes(); renderScenes(); changed("scenes"); };
+  $("#btn-add").onclick = () => { state.scenes.push({ name: `Scene ${state.scenes.length + 1}`, text: "", visual: "", transition: "cut", beats: 4 }); state.scenesEdited = true; renderScenes(); changed("scenes"); };
+  $("#menu-btn").onclick = (e) => { e.stopPropagation(); $("#menu-pop").hidden = !$("#menu-pop").hidden; };
+  document.addEventListener("click", () => ($("#menu-pop").hidden = true));
+  $("#btn-export").onclick = () => download(`${built.slug}.motion.json`, JSON.stringify(state, null, 2), "application/json");
+  $("#btn-import").onclick = () => $("#file-import").click();
+  $("#file-import").onchange = async (e) => {
+    const f = e.target.files[0]; if (!f) return;
+    try { const txt = await f.text(); JSON.parse(txt); try { localStorage.setItem(KEY, txt); } catch (_) {} state = load(); if (!safeGet()) { const d = JSON.parse(txt); Object.assign(state, d); } init(); toast("Proyek diimpor ✓"); } catch (err) { toast("File tidak valid"); }
+    e.target.value = "";
+  };
+  $("#btn-reset").onclick = () => { if (!confirm("Hapus semua isian dan mulai dari awal?")) return; try { localStorage.removeItem(KEY); } catch (e) {} state = load(); init(); window.scrollTo({ top: 0, behavior: "smooth" }); };
+  window.addEventListener("resize", sizePreview);
+
+  function greet() {
+    const h = new Date().getHours();
+    const w = h < 11 ? "Selamat pagi" : h < 15 ? "Selamat siang" : h < 19 ? "Selamat sore" : "Selamat malam";
+    $("#greet").textContent = `${w}, mau bikin motion apa?`;
+  }
+
+  function init() { bind(); renderTemplates(); renderFilters(); renderElements(); renderStyles(); renderPalette(); renderScenes(); applySoundPreset(); changed(); }
+  if (!STYLES.length) { document.body.innerHTML = "<p style='padding:40px'>data/styles.js tidak ditemukan. Jalankan <code>node scripts/build-styles.mjs</code>.</p>"; return; }
+  state = load(); greet(); init(); requestAnimationFrame(frame);
+})();
+
+</script>
+</body>
+</html>

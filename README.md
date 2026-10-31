@@ -19,6 +19,14 @@ Dashboard (form + style)  →  prompts/<slug>.md  →  Claude Code + skill  → 
 
 Contoh hasil: [`prompts/contoh-launch-kopi-senja.md`](prompts/contoh-launch-kopi-senja.md).
 
+## Versi satu file (untuk artifact / hosting)
+`dist/motion-generator.html` = seluruh dashboard dalam **satu file HTML** (CSS, JS, dan data style sudah di dalamnya).
+Bisa dijadikan artifact Claude, diupload ke hosting statis mana pun (Netlify, GitHub Pages, Vercel), atau dibuka langsung.
+Setelah mengubah dashboard atau data, buat ulang dengan:
+```
+node scripts/build-styles.mjs && node scripts/build-single.mjs
+```
+
 ## Isi repo
 | Path | Isi |
 |---|---|

@@ -44,15 +44,16 @@
   const totalBeats = () => Math.max(1, Math.round((Number(state.project.duration) || 15) * (Number(state.project.bpm) || 120) / 60));
   const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
 
+  function safeGet() { try { return localStorage.getItem(KEY); } catch (e) { return null; } }
   function load() {
     try {
-      const s = JSON.parse(localStorage.getItem(KEY));
+      const s = JSON.parse(safeGet());
       if (s && s.project) { const d = defaults(); for (const k of Object.keys(d)) if (s[k] !== undefined) d[k] = (typeof d[k] === "object" && !Array.isArray(d[k])) ? { ...d[k], ...s[k] } : s[k]; return d; }
     } catch (e) {}
     const d = defaults(); state = d; autoScenes(); return d;
   }
   let saveT;
-  function save() { clearTimeout(saveT); saveT = setTimeout(() => { localStorage.setItem(KEY, JSON.stringify(state)); $("#saved").textContent = "Tersimpan otomatis ✓"; }, 200); $("#saved").textContent = "Menyimpan…"; }
+  function save() { clearTimeout(saveT); saveT = setTimeout(() => { try { localStorage.setItem(KEY, JSON.stringify(state)); $("#saved").textContent = "Tersimpan otomatis ✓"; } catch (e) { $("#saved").textContent = ""; } }, 200); $("#saved").textContent = "Menyimpan…"; }
 
   // ---------- scenes ----------
   function autoScenes() {
@@ -319,10 +320,10 @@
   $("#btn-import").onclick = () => $("#file-import").click();
   $("#file-import").onchange = async (e) => {
     const f = e.target.files[0]; if (!f) return;
-    try { localStorage.setItem(KEY, await f.text()); state = load(); init(); toast("Proyek diimpor ✓"); } catch (err) { toast("File tidak valid"); }
+    try { const txt = await f.text(); JSON.parse(txt); try { localStorage.setItem(KEY, txt); } catch (_) {} state = load(); if (!safeGet()) { const d = JSON.parse(txt); Object.assign(state, d); } init(); toast("Proyek diimpor ✓"); } catch (err) { toast("File tidak valid"); }
     e.target.value = "";
   };
-  $("#btn-reset").onclick = () => { if (!confirm("Hapus semua isian dan mulai dari awal?")) return; localStorage.removeItem(KEY); state = load(); init(); window.scrollTo({ top: 0, behavior: "smooth" }); };
+  $("#btn-reset").onclick = () => { if (!confirm("Hapus semua isian dan mulai dari awal?")) return; try { localStorage.removeItem(KEY); } catch (e) {} state = load(); init(); window.scrollTo({ top: 0, behavior: "smooth" }); };
   window.addEventListener("resize", sizePreview);
 
   function greet() {
