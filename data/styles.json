@@ -31,7 +31,13 @@
         "ui click"
       ],
       "engine": "canvas2d",
-      "confidence": "sumber"
+      "confidence": "sumber",
+      "avoid": [
+        "lebih dari 2 warna aksen",
+        "transisi lambat >1 detik",
+        "teks kecil yang tidak terbaca di HP"
+      ],
+      "sfx_query": "cinematic modern"
     },
     {
       "id": "kinetic-type",
@@ -54,7 +60,12 @@
         "whoosh"
       ],
       "engine": "canvas2d",
-      "confidence": "sumber"
+      "confidence": "sumber",
+      "avoid": [
+        "terlalu banyak kata per layar",
+        "font tipis di ukuran kecil"
+      ],
+      "sfx_query": "typing whoosh"
     },
     {
       "id": "swiss",
@@ -77,7 +88,13 @@
         "paper slide"
       ],
       "engine": "canvas2d",
-      "confidence": "sumber"
+      "confidence": "sumber",
+      "avoid": [
+        "easing elastis/bounce",
+        "ornamen dekoratif",
+        "elemen keluar dari grid"
+      ],
+      "sfx_query": "minimal click"
     },
     {
       "id": "glitch",
@@ -104,7 +121,12 @@
         "sub drop"
       ],
       "engine": "canvas2d",
-      "confidence": "sumber"
+      "confidence": "sumber",
+      "avoid": [
+        "glitch terus-menerus tanpa jeda",
+        "lebih dari 1 efek glitch utama per scene"
+      ],
+      "sfx_query": "glitch digital"
     },
     {
       "id": "liquid",
@@ -129,7 +151,12 @@
         "ambient pad"
       ],
       "engine": "canvas2d",
-      "confidence": "sumber"
+      "confidence": "sumber",
+      "avoid": [
+        "sudut tajam",
+        "cut keras"
+      ],
+      "sfx_query": "liquid bubble"
     },
     {
       "id": "flat",
@@ -154,7 +181,12 @@
         "ui click"
       ],
       "engine": "canvas2d",
-      "confidence": "sumber"
+      "confidence": "sumber",
+      "avoid": [
+        "gradien berat",
+        "bayangan realistis"
+      ],
+      "sfx_query": "pop cartoon"
     },
     {
       "id": "isometric",
@@ -178,7 +210,12 @@
         "hum"
       ],
       "engine": "canvas2d",
-      "confidence": "sumber"
+      "confidence": "sumber",
+      "avoid": [
+        "perspektif yang tidak konsisten",
+        "sudut selain 30 derajat"
+      ],
+      "sfx_query": "mechanical"
     },
     {
       "id": "hand-drawn",
@@ -201,7 +238,12 @@
         "tap"
       ],
       "engine": "canvas2d",
-      "confidence": "sumber"
+      "confidence": "sumber",
+      "avoid": [
+        "garis vektor sempurna",
+        "gerak terlalu mulus 60fps tanpa boil"
+      ],
+      "sfx_query": "pencil paper"
     },
     {
       "id": "paper-cutout",
@@ -225,7 +267,12 @@
         "stop-motion clack"
       ],
       "engine": "canvas2d",
-      "confidence": "sebagian"
+      "confidence": "sebagian",
+      "avoid": [
+        "gerak super mulus",
+        "efek digital neon"
+      ],
+      "sfx_query": "paper"
     },
     {
       "id": "synthwave",
@@ -250,7 +297,12 @@
         "tape stop"
       ],
       "engine": "canvas2d",
-      "confidence": "sebagian"
+      "confidence": "sebagian",
+      "avoid": [
+        "palet di luar neon/ungu",
+        "font modern minimalis"
+      ],
+      "sfx_query": "synth retro"
     },
     {
       "id": "glass",
@@ -274,7 +326,13 @@
         "airy whoosh"
       ],
       "engine": "canvas2d",
-      "confidence": "sumber"
+      "confidence": "sumber",
+      "avoid": [
+        "overshoot besar",
+        "glow di elemen UI",
+        "kontras keras"
+      ],
+      "sfx_query": "shimmer airy"
     },
     {
       "id": "3d",
@@ -298,7 +356,12 @@
         "doppler whoosh"
       ],
       "engine": "three.js",
-      "confidence": "sumber"
+      "confidence": "sumber",
+      "avoid": [
+        "kamera bergetar tanpa alasan",
+        "terlalu banyak objek di frame"
+      ],
+      "sfx_query": "cinematic boom"
     },
     {
       "id": "dataviz",
@@ -322,7 +385,12 @@
         "ding"
       ],
       "engine": "canvas2d",
-      "confidence": "sumber"
+      "confidence": "sumber",
+      "avoid": [
+        "angka tanpa label",
+        "chart tanpa sumber data"
+      ],
+      "sfx_query": "data blip"
     },
     {
       "id": "brutalist",
@@ -346,7 +414,12 @@
         "noise burst"
       ],
       "engine": "canvas2d",
-      "confidence": "umum"
+      "confidence": "umum",
+      "avoid": [
+        "easing halus",
+        "palet pastel"
+      ],
+      "sfx_query": "hard hit"
     }
   ]
 }

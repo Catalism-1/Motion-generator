@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Motion Generator · Dashboard</title>
+  <link rel="stylesheet" href="app.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <svg class="spark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v6M12 16v6M2 12h6M16 12h6M4.9 4.9l4.2 4.2M14.9 14.9l4.2 4.2M4.9 19.1l4.2-4.2M14.9 9.1l4.2-4.2"/></svg>
+      <span class="brand-name">Motion Generator</span>
+      <span class="badge">brief builder</span>
+    </div>
+    <div class="top-actions">
+      <button class="btn ghost" id="btn-import">Impor .json</button>
+      <button class="btn ghost" id="btn-export">Ekspor .json</button>
+      <button class="btn ghost" id="btn-reset">Reset</button>
+      <input type="file" id="file-import" accept="application/json" hidden />
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- STEPS -->
+    <nav class="steps" id="steps">
+      <button data-step="0" class="step active"><span class="num">1</span><span><b>Proyek</b><small>judul, durasi, rasio</small></span></button>
+      <button data-step="1" class="step"><span class="num">2</span><span><b>Style</b><small>pilih gaya visual</small></span></button>
+      <button data-step="2" class="step"><span class="num">3</span><span><b>Scene</b><small>sketsa / shot list</small></span></button>
+      <button data-step="3" class="step"><span class="num">4</span><span><b>Suara</b><small>musik &amp; SFX</small></span></button>
+      <button data-step="4" class="step"><span class="num">5</span><span><b>Output</b><small>format &amp; hasil</small></span></button>
+      <div class="howto">
+        <h4>Cara pakai</h4>
+        <ol>
+          <li>Isi 5 langkah ini.</li>
+          <li>Download <code>.md</code> ke folder <code>prompts/</code>.</li>
+          <li>Di Claude Code: <i>"buat video dari prompts/&lt;nama&gt;.md"</i></li>
+        </ol>
+      </div>
+    </nav>
+
+    <!-- FORM -->
+    <main class="form" id="form">
+      <!-- 1. Proyek -->
+      <section class="panel" data-panel="0">
+        <h2>Proyek</h2>
+        <p class="lead">Mulai dari gambaran besar. Brief yang jelas = hasil AI yang jelas.</p>
+        <div class="grid2">
+          <label class="field span2">Judul<input data-bind="project.title" placeholder="mis. Launch Kopi Senja" /></label>
+          <label class="field span2">Brief / tujuan video
+            <textarea data-bind="project.brief" rows="4" placeholder="Apa yang mau disampaikan? Produk apa? Perasaan apa yang mau ditimbulkan?"></textarea>
+          </label>
+          <label class="field span2">Audiens<input data-bind="project.audience" placeholder="mis. Gen Z pecinta kopi, Instagram" /></label>
+          <label class="field">Durasi (detik)<input type="number" min="3" max="180" data-bind="project.duration" data-num /></label>
+          <label class="field">Tempo (BPM)<input type="number" min="60" max="200" data-bind="project.bpm" data-num /></label>
+          <div class="field span2">Rasio
+            <div class="seg" data-seg="project.aspect">
+              <button data-v="16:9">16:9 · YouTube</button><button data-v="9:16">9:16 · Reels/TikTok</button><button data-v="1:1">1:1 · Feed</button><button data-v="4:5">4:5 · Portrait</button>
+            </div>
+          </div>
+          <div class="field">FPS
+            <div class="seg" data-seg="project.fps" data-num><button data-v="30">30</button><button data-v="60">60</button></div>
+          </div>
+          <label class="field">Bahasa teks
+            <select data-bind="project.lang"><option>Indonesia</option><option>English</option><option>Campur</option></select>
+          </label>
+        </div>
+      </section>
+
+      <!-- 2. Style -->
+      <section class="panel" data-panel="1" hidden>
+        <h2>Style</h2>
+        <p class="lead">Pilih satu gaya. Preview-nya animasi kode asli, sama seperti hasil akhirnya nanti.</p>
+        <div class="style-grid" id="style-grid"></div>
+        <div class="style-detail" id="style-detail"></div>
+        <div class="grid2">
+          <div class="field span2">Palet (klik untuk ubah)
+            <div class="palette" id="palette"></div>
+          </div>
+          <label class="field">Font<input data-bind="style.font" placeholder="kosongkan = default style" /></label>
+          <label class="field">Intensitas gerak <span class="hint" id="intensity-label"></span>
+            <input type="range" min="1" max="5" step="1" data-bind="style.intensity" data-num />
+          </label>
+          <label class="field span2">Catatan style<textarea rows="2" data-bind="style.notes" placeholder="mis. pakai logo di pojok kanan bawah, jangan ada warna hijau"></textarea></label>
+        </div>
+      </section>
+
+      <!-- 3. Scene -->
+      <section class="panel" data-panel="2" hidden>
+        <h2>Scene <span class="hint" id="scene-total"></span></h2>
+        <p class="lead">Ini sketsanya: urutan scene di atas beat. AI akan menggambar tiap scene dengan kode.</p>
+        <div class="row">
+          <button class="btn" id="btn-autoscenes">Isi otomatis (5 scene)</button>
+          <button class="btn ghost" id="btn-fit">Pas-kan ke durasi</button>
+          <button class="btn ghost" id="btn-addscene">+ Tambah scene</button>
+        </div>
+        <div id="scenes"></div>
+      </section>
+
+      <!-- 4. Suara -->
+      <section class="panel" data-panel="3" hidden>
+        <h2>Suara</h2>
+        <p class="lead">Timeline HITS dibuat otomatis dari scene. Agent akan mencari SFX untuk tiap hit.</p>
+        <div class="grid2">
+          <div class="field span2">Musik
+            <div class="seg" data-seg="sound.music"><button data-v="synth">Sintesis</button><button data-v="file">File sendiri</button><button data-v="none">Tanpa musik</button></div>
+          </div>
+          <label class="field" data-show="sound.music=file">Path file musik<input data-bind="sound.musicFile" placeholder="mis. assets/lagu.mp3" /></label>
+          <label class="field">Mood musik<input data-bind="sound.musicMood" placeholder="mis. lo-fi hangat, house energik" /></label>
+          <div class="field span2">Mode SFX
+            <div class="seg" data-seg="sound.sfxMode"><button data-v="agent">Agent cari online</button><button data-v="mix">Online + sintesis</button><button data-v="synth">Sintesis lokal</button></div>
+          </div>
+          <div class="field" data-show="sound.sfxMode!=synth">Sumber
+            <div class="chips" data-chips="sound.sources"><button data-v="openverse">Openverse</button><button data-v="freesound">Freesound (API key)</button></div>
+          </div>
+          <div class="field" data-show="sound.sfxMode!=synth">Lisensi diizinkan
+            <div class="chips" data-chips="sound.license"><button data-v="cc0">CC0</button><button data-v="by">CC-BY</button><button data-v="by-sa">CC-BY-SA</button></div>
+          </div>
+          <div class="field span2">Kategori SFX
+            <div class="chips" data-chips="sound.categories">
+              <button data-v="whoosh">whoosh</button><button data-v="swoosh">swoosh</button><button data-v="hit">hit</button><button data-v="impact">impact</button>
+              <button data-v="riser">riser</button><button data-v="ui click">ui click</button><button data-v="glitch">glitch</button><button data-v="shimmer">shimmer</button>
+            </div>
+          </div>
+        </div>
+        <h3>Timeline HITS</h3>
+        <div class="hits" id="hits"></div>
+      </section>
+
+      <!-- 5. Output -->
+      <section class="panel" data-panel="4" hidden>
+        <h2>Output</h2>
+        <p class="lead">Apa yang harus diserahkan AI di akhir.</p>
+        <div class="grid2">
+          <div class="field span2">Format kode
+            <div class="seg" data-seg="output.format"><button data-v="html-canvas">HTML + Canvas</button><button data-v="threejs">Three.js</button><button data-v="remotion">Remotion</button></div>
+          </div>
+          <label class="check"><input type="checkbox" data-bind="output.storyboard" /> Storyboard PNG (sketsa per scene)</label>
+          <label class="check"><input type="checkbox" data-bind="output.mp4" /> Render MP4 dengan audio</label>
+          <label class="field span2">Catatan tambahan<textarea rows="3" data-bind="output.extra" placeholder="hal lain yang AI harus tahu"></textarea></label>
+        </div>
+        <div class="callout">
+          <b>Selesai?</b> Klik <b>Download .md</b> di kanan, simpan ke <code>prompts/</code>, lalu minta Claude:
+          <code id="cmd-hint">buat video dari prompts/film.md</code>
+        </div>
+      </section>
+
+      <div class="nav-btns">
+        <button class="btn ghost" id="btn-prev">← Kembali</button>
+        <button class="btn primary" id="btn-next">Lanjut →</button>
+      </div>
+    </main>
+
+    <!-- PREVIEW -->
+    <aside class="preview">
+      <div class="card">
+        <div class="card-head"><b>Preview style</b><span class="hint" id="preview-scene"></span></div>
+        <div class="canvas-wrap" id="canvas-wrap"><canvas id="preview"></canvas></div>
+      </div>
+      <div class="card grow">
+        <div class="card-head">
+          <b>Prompt markdown</b>
+          <div class="row tight">
+            <button class="btn small" id="btn-copy">Copy</button>
+            <button class="btn small primary" id="btn-download">Download .md</button>
+          </div>
+        </div>
+        <pre class="md" id="md"></pre>
+      </div>
+    </aside>
+  </div>
+  <div class="toast" id="toast"></div>
+
+  <script src="../data/styles.js"></script>
+  <script src="previews.js"></script>
+  <script src="markdown.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
